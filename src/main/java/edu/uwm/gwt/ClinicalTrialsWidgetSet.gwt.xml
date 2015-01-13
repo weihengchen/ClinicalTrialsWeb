@@ -11,4 +11,6 @@
 
     <inherits name="com.vaadin.addon.touchkit.gwt.TouchKitWidgetSet" />
 
+
+    <inherits name="org.vaadin.addon.leaflet.draw.DrawWidgetset" />
 </module>

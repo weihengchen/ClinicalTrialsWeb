@@ -18,7 +18,8 @@ public class ClinicalTrialsUIProvider extends UIProvider {
         if (overrideMobileUA() || mobileUserAgent || mobileParameter) {
             return ClinicalTrialsTouchKitUI.class;
         } else {
-            return ClinicalTrialsFallbackUI.class;
+        	return ClinicalTrialsTouchKitUI.class;
+        	//return ClinicalTrialsFallbackUI.class;
         }
     }
 

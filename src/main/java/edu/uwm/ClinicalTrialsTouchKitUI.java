@@ -1,6 +1,7 @@
 package edu.uwm;
 
 import edu.uwm.ui.*;
+import edu.uwm.data.*;
 import edu.uwm.gwt.client.*;
 
 import com.vaadin.addon.touchkit.annotations.CacheManifestEnabled;
@@ -31,6 +32,9 @@ import com.vaadin.ui.UI;
 // Make the server retain UI state whenever the browser reloads the app
 @PreserveOnRefresh
 public class ClinicalTrialsTouchKitUI extends UI {
+	private TabBarView tabBarView = null;
+	private MapView mapview = null;
+	private HadoopData hd = null;
 
     private final ClinicalTrialsPersistToServerRpc serverRpc = new ClinicalTrialsPersistToServerRpc() {
         @Override
@@ -41,17 +45,19 @@ public class ClinicalTrialsTouchKitUI extends UI {
 
     @Override
     protected void init(VaadinRequest request) {
-        final TabBarView tabBarView = new TabBarView();
+    	hd = HadoopData.getInstance();
+    	
+        tabBarView = new TabBarView();
         final NavigationManager navigationManager = new NavigationManager();
-        navigationManager.setCaption("Tab 1");
+        //navigationManager.setCaption("Data");
         navigationManager.setCurrentComponent(new MenuView());
         Tab tab;
         tab = tabBarView.addTab(navigationManager);
-        tab.setIcon(FontAwesome.BOOK);
-        tab = tabBarView.addTab(new Label("Tab 2"), "Tab 2");
-        tab.setIcon(FontAwesome.AMBULANCE);
-        tab = tabBarView.addTab(new Label("Tab 3"), "Tab 3");
-        tab.setIcon(FontAwesome.DOWNLOAD);
+        tab.setIcon(FontAwesome.DATABASE);
+        
+        mapview = new MapView();
+        tab = tabBarView.addTab(mapview);
+        tab.setIcon(FontAwesome.MAP_MARKER);
         setContent(tabBarView);
 
         // Use of the OfflineMode connector is optional.
@@ -62,6 +68,18 @@ public class ClinicalTrialsTouchKitUI extends UI {
         // Define the timeout in secs to wait when a server request is sent
         // before falling back to offline mode.
         offlineMode.setOfflineModeTimeout(15);
+    }
+    
+    public static ClinicalTrialsTouchKitUI getApp() {
+    	return (ClinicalTrialsTouchKitUI) UI.getCurrent();
+    }
+    public void showDataSet(String data_set) {
+    	tabBarView.setSelectedTab(mapview);
+    	return;
+    }
+    public void showDataSet(int ind) {
+    	tabBarView.setSelectedTab(mapview);
+    	return;
     }
 }
 
