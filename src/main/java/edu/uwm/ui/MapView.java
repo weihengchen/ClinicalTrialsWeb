@@ -19,8 +19,6 @@ import com.vaadin.addon.touchkit.extensions.Geolocator;
 import com.vaadin.addon.touchkit.extensions.PositionCallback;
 import com.vaadin.addon.touchkit.gwt.client.vcom.Position;
 import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.demo.parking.widgetset.client.model.Location;
-import com.vaadin.demo.parking.widgetset.client.model.Ticket;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Button;
@@ -83,7 +81,7 @@ public class MapView extends CssLayout {
         }
         
         HadoopData hd = HadoopData.getInstance();
-        HashMap<String, String> des;
+        HashMap<String, String> des = null;
         ArrayList< ArrayList<String> > dataset = hd.getClusterDataSet(dataset_key, des);
         
         LCircleMarker cMarker = null;
