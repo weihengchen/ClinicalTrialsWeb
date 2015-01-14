@@ -74,11 +74,10 @@ public class HadoopData {
 	public ArrayList<String> getClusterDataList() {
 		return data_list;
 	}
-	public ArrayList< ArrayList<String> > getClusterDataSet(String key, HashMap<String, String> des) {
+	public ArrayList< ArrayList<String> > getClusterDataSet(String key) {
 		//mark\tcluster_num\tlatitude\tlongitude\tname\tAddress
 		if (!name2full.containsKey(key)) return null;
 		if (name2des.containsKey(key)) {
-			des = name2des.get(key);
 			return name2dataset.get(key);
 		}
 		ArrayList< ArrayList<String> > re = new ArrayList< ArrayList<String> >();
@@ -112,7 +111,6 @@ public class HadoopData {
     	}
 		name2dataset.put(key, re);
 		name2des.put(key, de);
-		des = de;
 		return re;
 	}
 }

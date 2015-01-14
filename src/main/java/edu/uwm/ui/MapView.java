@@ -81,8 +81,7 @@ public class MapView extends CssLayout {
         }
         
         HadoopData hd = HadoopData.getInstance();
-        HashMap<String, String> des = null;
-        ArrayList< ArrayList<String> > dataset = hd.getClusterDataSet(dataset_key, des);
+        ArrayList< ArrayList<String> > dataset = hd.getClusterDataSet(dataset_key);
         
         LCircleMarker cMarker = null;
         for (ArrayList<String> tmp : dataset) {
