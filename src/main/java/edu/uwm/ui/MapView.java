@@ -1,5 +1,6 @@
 package edu.uwm.ui;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -40,7 +41,7 @@ import edu.uwm.data.HadoopData;
 
 public class MapView extends CssLayout implements LeafletClickListener{
 
-    private LMap map;
+    private LMap map = null;
     private HashMap<String, String> id2color = new HashMap<String, String>();
     private int zoom_level;
 
@@ -72,24 +73,30 @@ public class MapView extends CssLayout implements LeafletClickListener{
         map.setSizeFull();
         zoom_level = 3;
         map.setZoomLevel(zoom_level);
+        map.setCenter(new Point(43.041809,-87.906837));
         
         addComponent(map);
-        
-        map.setCenter(new Point(43.041809,-87.906837));
     }
     
     public Boolean updateClusterMap(String dataset_key) {
+    	if (map == null) {
+    		buildView();
+    	}
     	Iterator<Component> iterator = map.iterator();
         Collection<Component> remove = new ArrayList<Component>();
         while (iterator.hasNext()) {
             Component next = iterator.next();
-            if (next instanceof LMarker) {
+            if (next instanceof LCircleMarker) {
                 remove.add(next);
             }
         }
         for (Component component : remove) {
             map.removeComponent(component);
         }
+        
+        zoom_level = 3;
+        map.setZoomLevel(zoom_level);
+        map.setCenter(new Point(43.041809,-87.906837));
         
         HadoopData hd = HadoopData.getInstance();
         ArrayList< ArrayList<String> > dataset = hd.getClusterDataSet(dataset_key);
@@ -151,7 +158,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
     	if (!(para instanceof ArrayList<?>)) {
     		return;
     	}
-    	data =(ArrayList<ArrayList<String> >) para;
+    	data = (ArrayList<ArrayList<String> >) para;
     	Popover pover = new Popover();
     	pover.addStyleName("Detail");
 

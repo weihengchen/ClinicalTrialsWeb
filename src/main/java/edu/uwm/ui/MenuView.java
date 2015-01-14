@@ -7,6 +7,8 @@ import com.vaadin.addon.touchkit.ui.NavigationButton.NavigationButtonClickEvent;
 import com.vaadin.addon.touchkit.ui.NavigationButton.NavigationButtonClickListener;
 import com.vaadin.addon.touchkit.ui.NavigationView;
 import com.vaadin.addon.touchkit.ui.VerticalComponentGroup;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Notification;
 
 import edu.uwm.data.*;
@@ -16,9 +18,11 @@ import edu.uwm.ClinicalTrialsTouchKitUI;
 public class MenuView extends NavigationView {
 
     public MenuView() {
-        setCaption("Data Set");
-        
-        HadoopData hd = HadoopData.getInstance();
+        buildView();
+    }
+    public void buildView() {
+    	setCaption("Data Set");
+    	HadoopData hd = HadoopData.getInstance();
         ArrayList<String> data_list = hd.getClusterDataList();
 
         final VerticalComponentGroup content = new VerticalComponentGroup();
@@ -34,6 +38,15 @@ public class MenuView extends NavigationView {
         	});
         	content.addComponent(button);
         }
+        Button reload = new Button("Reload Data", new Button.ClickListener() {
+        	@Override
+        	public void buttonClick(ClickEvent event) {
+        		ClinicalTrialsTouchKitUI app = ClinicalTrialsTouchKitUI.getApp();
+        		app.reloadData();
+        	}
+        });
+        content.addComponent(reload);
+        
         /*
         NavigationButton button = new NavigationButton("Form");
         button.addClickListener(new NavigationButtonClickListener() {
@@ -45,5 +58,5 @@ public class MenuView extends NavigationView {
         content.addComponent(button);
         */
         setContent(content);
-    };
+    }
 }

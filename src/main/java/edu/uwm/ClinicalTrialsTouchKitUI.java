@@ -1,5 +1,11 @@
 package edu.uwm;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+
+import org.vaadin.addon.leaflet.LCircleMarker;
+
 import edu.uwm.ui.*;
 import edu.uwm.data.*;
 import edu.uwm.gwt.client.*;
@@ -14,6 +20,7 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.UI;
@@ -35,6 +42,7 @@ public class ClinicalTrialsTouchKitUI extends UI {
 	private TabBarView tabBarView = null;
 	private MapView mapview = null;
 	private HadoopData hd = null;
+	private MenuView menuview = null;
 
     private final ClinicalTrialsPersistToServerRpc serverRpc = new ClinicalTrialsPersistToServerRpc() {
         @Override
@@ -45,6 +53,18 @@ public class ClinicalTrialsTouchKitUI extends UI {
 
     @Override
     protected void init(VaadinRequest request) {
+    	buildView();
+
+        // Use of the OfflineMode connector is optional.
+        OfflineMode offlineMode = new OfflineMode();
+        offlineMode.extend(this);
+        // Maintain the session when the browser app closes.
+        offlineMode.setPersistentSessionCookie(true);
+        // Define the timeout in secs to wait when a server request is sent
+        // before falling back to offline mode.
+        offlineMode.setOfflineModeTimeout(15);
+    }
+    private void buildView() {
     	hd = HadoopData.getInstance();
     	
         tabBarView = new TabBarView();
@@ -59,24 +79,19 @@ public class ClinicalTrialsTouchKitUI extends UI {
         tab = tabBarView.addTab(mapview);
         tab.setIcon(FontAwesome.MAP_MARKER);
         setContent(tabBarView);
-
-        // Use of the OfflineMode connector is optional.
-        OfflineMode offlineMode = new OfflineMode();
-        offlineMode.extend(this);
-        // Maintain the session when the browser app closes.
-        offlineMode.setPersistentSessionCookie(true);
-        // Define the timeout in secs to wait when a server request is sent
-        // before falling back to offline mode.
-        offlineMode.setOfflineModeTimeout(15);
     }
     
     public static ClinicalTrialsTouchKitUI getApp() {
     	return (ClinicalTrialsTouchKitUI) UI.getCurrent();
     }
     public void showDataSet(String data_set) {
-    	tabBarView.setSelectedTab(mapview);
     	mapview.updateClusterMap(data_set);
+    	tabBarView.setSelectedTab(mapview);
     	return;
+    }
+    public void reloadData() {
+    	hd.reloadData();
+    	buildView();
     }
 }
 

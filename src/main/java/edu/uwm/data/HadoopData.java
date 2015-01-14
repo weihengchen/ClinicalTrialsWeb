@@ -122,4 +122,13 @@ public class HadoopData implements Serializable{
 		name2des.put(key, de);
 		return re;
 	}
+	public void reloadData() {
+		instance = null;
+		fileSystem = null;
+		data_list = null;
+		file_name = null;
+		name2full = null;
+		name2dataset = null;
+		name2des = null;
+	}
 }
