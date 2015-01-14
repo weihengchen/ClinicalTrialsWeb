@@ -75,10 +75,7 @@ public class ClinicalTrialsTouchKitUI extends UI {
     }
     public void showDataSet(String data_set) {
     	tabBarView.setSelectedTab(mapview);
-    	return;
-    }
-    public void showDataSet(int ind) {
-    	tabBarView.setSelectedTab(mapview);
+    	mapview.updateMap(data_set);
     	return;
     }
 }
