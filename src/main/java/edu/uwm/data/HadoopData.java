@@ -93,10 +93,7 @@ public class HadoopData implements Serializable{
     			//System.err.println((new Exception().getStackTrace()[0].getFileName()) + (new Exception().getStackTrace()[0].getLineNumber()) + line);
     			String []sep = line.split("\t");
     			if (sep[0].charAt(0) == '#') {
-    				if (sep[0].equals("#name")) de.put("name", sep[1]);
-    				else if (sep[0].equals("#cnum")) de.put("cnum", sep[1]);
-    				else if (sep[0].equals("#onum")) de.put("onum", sep[1]);
-    				else if (sep[0].equals("#cost")) de.put("cost", sep[1]);
+    				de.put(sep[0].substring(1), sep[1]);
     			} else {
     				ArrayList<String> tmp = new ArrayList<String>();
     				for (String str : sep) {
