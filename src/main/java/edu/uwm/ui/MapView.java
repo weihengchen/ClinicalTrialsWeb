@@ -89,12 +89,12 @@ public class MapView extends CssLayout {
         LCircleMarker cMarker = null;
         for (ArrayList<String> tmp : dataset) {
         	if (tmp.get(0).equals("origin")) {
-        		cMarker = new LCircleMarker(Double.parseDouble(tmp.get(2)), Double.parseDouble(tmp.get(3)), 10);
+        		cMarker = new LCircleMarker(Double.parseDouble(tmp.get(3)), Double.parseDouble(tmp.get(2)), 10);
         		cMarker.setColor("#FF00FF");
         		cMarker.setWeight(3);
         		map.addComponent(cMarker);
         	} else if(tmp.get(0).equals("center")) {
-        		cMarker = new LCircleMarker(Double.parseDouble(tmp.get(2)), Double.parseDouble(tmp.get(3)), 10);
+        		cMarker = new LCircleMarker(Double.parseDouble(tmp.get(3)), Double.parseDouble(tmp.get(2)), 10);
         		cMarker.setColor("#FF0000");
         		cMarker.setFill(true);
         		cMarker.setWeight(10);
