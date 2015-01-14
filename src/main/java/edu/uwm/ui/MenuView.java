@@ -19,7 +19,7 @@ public class MenuView extends NavigationView {
         setCaption("Data Set");
         
         HadoopData hd = HadoopData.getInstance();
-        ArrayList<String> data_list = hd.getDataList();
+        ArrayList<String> data_list = hd.getClusterDataList();
 
         final VerticalComponentGroup content = new VerticalComponentGroup();
         for(String data_name : data_list) {
@@ -29,7 +29,6 @@ public class MenuView extends NavigationView {
         		public void buttonClick(NavigationButtonClickEvent event) {
         			ClinicalTrialsTouchKitUI app = ClinicalTrialsTouchKitUI.getApp();
         			NavigationButton nb = (NavigationButton)event.getComponent();
-        			Notification.show(nb.getCaption());
         			app.showDataSet(nb.getCaption());
         		}
         	});
