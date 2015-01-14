@@ -2,13 +2,13 @@ package edu.uwm.data;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import com.google.gwt.dev.util.collect.HashMap;
 import com.vaadin.server.VaadinService;
 import com.vaadin.ui.Notification;
 
@@ -42,7 +42,7 @@ public class HadoopData {
     	conf.addResource(new Path(basepath+"/config/hdfs-site.xml"));
     	conf.addResource(new Path(basepath+"/config/mpred-site.xml"));
     	
-    	String dir = "/user/project/cluster_result";
+    	String dir = "/user/projectcluster_result";
     	Path path = new Path(dir);
     	
     	try {
