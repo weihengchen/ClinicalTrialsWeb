@@ -42,7 +42,7 @@ public class HadoopData {
     	conf.addResource(new Path(basepath+"/config/hdfs-site.xml"));
     	conf.addResource(new Path(basepath+"/config/mpred-site.xml"));
     	
-    	String dir = "/user/projectcluster_result";
+    	String dir = "/user/project/cluster_result";
     	Path path = new Path(dir);
     	
     	try {
