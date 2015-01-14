@@ -8,6 +8,7 @@ import com.vaadin.addon.touchkit.ui.NavigationButton.NavigationButtonClickListen
 import com.vaadin.addon.touchkit.ui.NavigationView;
 import com.vaadin.addon.touchkit.ui.VerticalComponentGroup;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Notification;
 
@@ -28,12 +29,15 @@ public class MenuView extends NavigationView {
         final VerticalComponentGroup content = new VerticalComponentGroup();
         for(String data_name : data_list) {
         	NavigationButton button = new NavigationButton(data_name);
+        	button.setData(data_name);
         	button.addClickListener(new NavigationButtonClickListener() {
         		@Override
         		public void buttonClick(NavigationButtonClickEvent event) {
-        			ClinicalTrialsTouchKitUI app = ClinicalTrialsTouchKitUI.getApp();
+        			FormView fv = new FormView();
         			NavigationButton nb = (NavigationButton)event.getComponent();
-        			app.showDataSet(nb.getCaption());
+        			fv.setData(nb.getData());
+        			fv.buildView();
+        			getNavigationManager().navigateTo(fv);
         		}
         	});
         	content.addComponent(button);
@@ -45,18 +49,6 @@ public class MenuView extends NavigationView {
         		app.reloadData();
         	}
         });
-        content.addComponent(reload);
-        
-        /*
-        NavigationButton button = new NavigationButton("Form");
-        button.addClickListener(new NavigationButtonClickListener() {
-            @Override
-            public void buttonClick(NavigationButtonClickEvent event) {
-                getNavigationManager().navigateTo(new FormView());
-            }
-        });
-        content.addComponent(button);
-        */
-        setContent(content);
+        setContent(new CssLayout(content, reload));
     }
 }

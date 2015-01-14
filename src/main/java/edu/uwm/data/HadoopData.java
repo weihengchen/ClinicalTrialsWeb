@@ -80,14 +80,7 @@ public class HadoopData implements Serializable{
 	public ArrayList<String> getClusterDataList() {
 		return data_list;
 	}
-	public ArrayList< ArrayList<String> > getClusterDataSet(String key) {
-		//mark\tcluster_num\tlatitude\tlongitude\tname\tAddress
-		
-		if (!name2full.containsKey(key)) return null;
-		if (name2des.containsKey(key)) {
-			return name2dataset.get(key);
-		}
-		
+	private void readData(String key) {
 		ArrayList< ArrayList<String> > re = new ArrayList< ArrayList<String> >();
 		HashMap<String, String> de = new HashMap<String, String>();
 		Path file = new Path(name2full.get(key));
@@ -116,11 +109,21 @@ public class HadoopData implements Serializable{
     		fin.close();
 		} catch (IOException e) {
     		e.printStackTrace();
-    		return null;
     	}
 		name2dataset.put(key, re);
 		name2des.put(key, de);
-		return re;
+	}
+	public HashMap<String, String> getClusterDes(String key) {
+		if (!name2full.containsKey(key)) return null;
+		if (!name2des.containsKey(key)) readData(key);
+		return name2des.get(key);
+	}
+	public ArrayList< ArrayList<String> > getClusterDataSet(String key) {
+		//mark\tcluster_num\tlatitude\tlongitude\tname\tAddress
+		
+		if (!name2full.containsKey(key)) return null;
+		if (!name2dataset.containsKey(key)) readData(key);
+		return name2dataset.get(key);
 	}
 	public void reloadData() {
 		instance = null;
