@@ -11,6 +11,7 @@ import java.util.List;
 import org.vaadin.addon.leaflet.LCircleMarker;
 import org.vaadin.addon.leaflet.LMap;
 import org.vaadin.addon.leaflet.LMarker;
+import org.vaadin.addon.leaflet.LPolyline;
 import org.vaadin.addon.leaflet.LTileLayer;
 import org.vaadin.addon.leaflet.LeafletClickEvent;
 import org.vaadin.addon.leaflet.LeafletClickListener;
@@ -36,6 +37,7 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vividsolutions.jts.geom.LineString;
 
 import edu.uwm.data.HadoopData;
 
@@ -86,9 +88,11 @@ public class MapView extends CssLayout implements LeafletClickListener{
         Collection<Component> remove = new ArrayList<Component>();
         while (iterator.hasNext()) {
             Component next = iterator.next();
+            remove.add(next);
+            /*
             if (next instanceof LCircleMarker) {
                 remove.add(next);
-            }
+            }*/
         }
         for (Component component : remove) {
             map.removeComponent(component);
@@ -105,6 +109,14 @@ public class MapView extends CssLayout implements LeafletClickListener{
         LCircleMarker cMarker = null;
         String color = null;
         HashMap<String, ArrayList< ArrayList<String> > > str2multi = new HashMap<String, ArrayList< ArrayList<String> > >();
+        HashMap<String, Point > center_pos = new HashMap<String, Point>();
+        
+        for (ArrayList<String> tmp : dataset) {
+        	if(tmp.get(0).equals("center")) {
+        		Point p = new Point(Double.parseDouble(tmp.get(3)), Double.parseDouble(tmp.get(2)));
+        		center_pos.put(tmp.get(1), p);
+        	}
+        }
         for (ArrayList<String> tmp : dataset) {
         	String mark_key = tmp.get(0) + tmp.get(1) + tmp.get(2) + tmp.get(3);
         	if (str2multi.containsKey(mark_key)) {
@@ -113,6 +125,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
         		continue;
         	}
         	ArrayList< ArrayList<String> > tmp_al = new ArrayList< ArrayList<String> >();
+        	
         	tmp_al.add(tmp);
         	str2multi.put(mark_key, tmp_al);
         	if (id2color.containsKey(tmp.get(1))) {
@@ -122,6 +135,13 @@ public class MapView extends CssLayout implements LeafletClickListener{
         		id2color.put(tmp.get(1), color);
         	}
         	if (tmp.get(0).equals("origin")) {
+        		if (center_pos.containsKey(tmp.get(1))) {
+        			LPolyline line = new LPolyline();
+        			line.setPoints(center_pos.get(tmp.get(1)), 
+        					new Point(Double.parseDouble(tmp.get(3)), Double.parseDouble(tmp.get(2))));
+        			line.setColor(color);
+        			map.addComponent(line);
+        		}
         		cMarker = new LCircleMarker(Double.parseDouble(tmp.get(3)), Double.parseDouble(tmp.get(2)), 2);
         		cMarker.setColor(color);
         		cMarker.setOpacity(0.50);
