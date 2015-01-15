@@ -64,7 +64,9 @@ public class MapView extends CssLayout implements LeafletClickListener{
 
         // Note, if you wish to use Mapbox base maps, get your own API key.
         LTileLayer mapBoxTiles = new LTileLayer(
-                "http://{s}.tiles.mapbox.com/v3/vaadin.i1pikm9o/{z}/{x}/{y}.png");
+        		//"https://a.tiles.mapbox.com/v4/weiheng.kp1naddf/page.html?access_token=pk.eyJ1Ijoid2VpaGVuZyIsImEiOiJxRXhVT2pVIn0.NLDHWGkfoNQRysu3wKBoiA#4/43.04/-87.91");
+        		"http://a.tiles.mapbox.com/v4/weiheng.kp1naddf/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoid2VpaGVuZyIsImEiOiJxRXhVT2pVIn0.NLDHWGkfoNQRysu3wKBoiA");
+        		//"http://{s}.tiles.mapbox.com/v3/vaadin.i1pikm9o/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoid2VpaGVuZyIsImEiOiJxRXhVT2pVIn0.NLDHWGkfoNQRysu3wKBoiA");
         mapBoxTiles.setDetectRetina(true);
         map.addLayer(mapBoxTiles);
 
@@ -88,11 +90,9 @@ public class MapView extends CssLayout implements LeafletClickListener{
         Collection<Component> remove = new ArrayList<Component>();
         while (iterator.hasNext()) {
             Component next = iterator.next();
-            remove.add(next);
-            /*
-            if (next instanceof LCircleMarker) {
+            if (next instanceof LCircleMarker || next instanceof LPolyline) {
                 remove.add(next);
-            }*/
+            }
         }
         for (Component component : remove) {
             map.removeComponent(component);
