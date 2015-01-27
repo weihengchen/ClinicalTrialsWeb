@@ -23,8 +23,8 @@ public class FormView extends NavigationView {
         buildView();
     }
     public void buildView() {
-    	setCaption("Form");
     	if (this.getData() == null) return;
+    	setCaption((String)this.getData());
     	HadoopData hd = HadoopData.getInstance();
     	HashMap<String, String> des = hd.getClusterDes((String)this.getData());
     	

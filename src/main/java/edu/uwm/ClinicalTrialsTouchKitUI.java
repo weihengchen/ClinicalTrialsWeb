@@ -75,6 +75,12 @@ public class ClinicalTrialsTouchKitUI extends UI {
         tab = tabBarView.addTab(navigationManager);
         tab.setIcon(FontAwesome.DATABASE);
         
+        final NavigationManager condManager = new NavigationManager();
+        //navigationManager.setCaption("Data");
+        condManager.setCurrentComponent(new ConditionsView());
+        tab = tabBarView.addTab(condManager);
+        tab.setIcon(FontAwesome.LIST);
+        
         mapview = new MapView();
         tab = tabBarView.addTab(mapview);
         tab.setIcon(FontAwesome.MAP_MARKER);
@@ -86,6 +92,11 @@ public class ClinicalTrialsTouchKitUI extends UI {
     }
     public void showDataSet(String data_set) {
     	mapview.updateClusterMap(data_set);
+    	tabBarView.setSelectedTab(mapview);
+    	return;
+    }
+    public void showOriginalDataSet(String data_set) {
+    	mapview.updateOriginalMap(data_set);
     	tabBarView.setSelectedTab(mapview);
     	return;
     }
