@@ -34,13 +34,20 @@ public class ShellExec {
 	
 	private  Boolean execCommand(String shell) {
 		try {
+			ArrayList<String> execShell = new ArrayList<String>();
+			execShell.add("sh");
+			execShell.add(shell);
+			execShell.addAll(paras);
+			Process p = Runtime.getRuntime().exec((String[]) execShell.toArray());
+			/*
 			String args = "";
 			for (String str : paras) {
 				args += " " + str.replace(" ", "\" \"");
 			}
+			String[] arr = new String[paras.size()+2];
 			System.out.println("sh " + shell + args);
 			Process p = Runtime.getRuntime().exec("sh " + shell + args);
-			/*
+			
 			p.waitFor();
 			BufferedReader reader = 
 			         new BufferedReader(new InputStreamReader(p.getInputStream()));
