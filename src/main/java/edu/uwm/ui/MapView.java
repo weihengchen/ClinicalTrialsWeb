@@ -299,7 +299,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
         String color = "FF0000";
         
         for (ArrayList<String> tmp : dataset) {	
-        	cMarker = new LCircleMarker(Double.parseDouble(tmp.get(2)), Double.parseDouble(tmp.get(1)), 2);
+        	cMarker = new LCircleMarker(Double.parseDouble(tmp.get(1)), Double.parseDouble(tmp.get(0)), 2);
     		cMarker.setColor(color);
     		cMarker.setOpacity(0.90);
     		map.addComponent(cMarker);

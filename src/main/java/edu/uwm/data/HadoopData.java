@@ -139,12 +139,13 @@ public class HadoopData implements Serializable{
 		ArrayList< ArrayList<String> > re = new ArrayList< ArrayList<String> >();
 		HashMap<String, String> de = new HashMap<String, String>();
 		
-		String dir = "/user/project/original_data" + key.replace(' ', '_') + "_orginal.txt";
+		String dir = "/user/project/original_data/" + key.replace(' ', '_') + "_original.txt";
     	Path path = new Path(dir);
+    	System.out.println(dir);
     	
     	try {
     		if (fileSystem.exists(path) && fileSystem.isFile(path)) {
-    			
+    			System.out.println("Original File exist!");
     			FSDataInputStream fin = fileSystem.open(path);
         		BufferedReader reader = new BufferedReader(new InputStreamReader(fin));
         		String line;
