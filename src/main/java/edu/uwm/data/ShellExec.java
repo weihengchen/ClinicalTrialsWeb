@@ -36,7 +36,7 @@ public class ShellExec {
 		try {
 			String args = "";
 			for (String str : paras) {
-				args += " " + str;
+				args += " " + str.replace(" ", "\" \"");
 			}
 			System.out.println("sh " + shell + args);
 			Process p = Runtime.getRuntime().exec("sh " + shell + args);

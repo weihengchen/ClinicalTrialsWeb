@@ -80,7 +80,7 @@ public class OriginalDataView extends NavigationView {
         	
         	ShellExec shell = new ShellExec();
     		ArrayList<String> tmp = new ArrayList<String>();
-			tmp.add("\"" + (String)this.getData() + "\"");
+			tmp.add((String)this.getData());
 			shell.setParas(tmp);
 			shell.execOriginal();
 			
