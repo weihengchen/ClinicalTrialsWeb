@@ -38,7 +38,9 @@ public class ShellExec {
 			execShell.add("sh");
 			execShell.add(shell);
 			execShell.addAll(paras);
-			Process p = Runtime.getRuntime().exec((String[]) execShell.toArray());
+			String[] command = new String[execShell.size()];
+			command = execShell.toArray(command);
+			Process p = Runtime.getRuntime().exec(command);
 			/*
 			String args = "";
 			for (String str : paras) {
