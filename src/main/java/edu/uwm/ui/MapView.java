@@ -1,16 +1,9 @@
 package edu.uwm.ui;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
+import edu.uwm.data.MongodbData;
 import org.vaadin.addon.leaflet.LCircleMarker;
 import org.vaadin.addon.leaflet.LMap;
 import org.vaadin.addon.leaflet.LMarker;
@@ -21,8 +14,6 @@ import org.vaadin.addon.leaflet.LeafletClickListener;
 import org.vaadin.addon.leaflet.control.LZoom;
 import org.vaadin.addon.leaflet.control.LScale;
 import org.vaadin.addon.leaflet.shared.Point;
-
-import java.util.Random;
 
 import com.vaadin.addon.touchkit.extensions.Geolocator;
 import com.vaadin.addon.touchkit.extensions.PositionCallback;
@@ -291,17 +282,25 @@ public class MapView extends CssLayout implements LeafletClickListener{
         map.setZoomLevel(zoom_level);
         map.setCenter(new Point(43.041809,-87.906837));
         
-        HadoopData hd = HadoopData.getInstance();
-        ArrayList< ArrayList<String> > dataset = hd.getOriginalDataSet(dataset_key);
-        
+        //HadoopData hd = HadoopData.getInstance();
+        //ArrayList< ArrayList<String> > dataset = hd.getOriginalDataSet(dataset_key);
+        MongodbData md = MongodbData.getInstance();
+		ArrayList< ArrayList<String> > dataset = md.getOriginalDataSet(dataset_key);
+
+        HashSet<String> visited = new HashSet<String>();
         
         LCircleMarker cMarker = null;
-        String color = "FF0000";
+        String color = "FFFFFF";
         
-        for (ArrayList<String> tmp : dataset) {	
-        	cMarker = new LCircleMarker(Double.parseDouble(tmp.get(1)), Double.parseDouble(tmp.get(0)), 2);
+        for (ArrayList<String> tmp : dataset) {
+            String key = tmp.get(0) + tmp.get(1);
+            if (visited.contains(key)) {
+                continue;
+            }
+            visited.add(key);
+        	cMarker = new LCircleMarker(Double.parseDouble(tmp.get(0)), Double.parseDouble(tmp.get(1)), 5);
     		cMarker.setColor(color);
-    		cMarker.setOpacity(0.90);
+    		//cMarker.setOpacity(0.90);
     		map.addComponent(cMarker);
         }
         

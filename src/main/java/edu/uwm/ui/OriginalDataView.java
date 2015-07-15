@@ -18,6 +18,7 @@ import com.vaadin.ui.TextField;
 
 import edu.uwm.ClinicalTrialsTouchKitUI;
 import edu.uwm.data.HadoopData;
+import edu.uwm.data.MongodbData;
 import edu.uwm.data.ShellExec;
 
 @SuppressWarnings("serial")
@@ -29,24 +30,13 @@ public class OriginalDataView extends NavigationView {
     public void buildView() {
     	if (this.getData() == null) return;
     	setCaption((String)this.getData());
-    	HadoopData hd = HadoopData.getInstance();
-    	HashMap<String, String> des = hd.getOriginalDes((String)this.getData());
+    	//HadoopData hd = HadoopData.getInstance();
+		//HashMap<String, String> des = hd.getOriginalDes((String)this.getData());
+		MongodbData md = MongodbData.getInstance();
+		HashMap<String, String> des = md.getOriginalDes((String)this.getData());
     	
         final VerticalComponentGroup content = new VerticalComponentGroup();
-        
-        final Button submitButton = new Button("Cluster");
-        submitButton.setData(this.getData());
-        submitButton.addClickListener(new ClickListener() {
-            @Override
-            public void buttonClick(ClickEvent event) {
-    			ShellExec shell = new ShellExec();		
-    			Button nb = (Button)event.getComponent();
-    			ArrayList<String> tmp = new ArrayList<String>();
-    			tmp.add((String)nb.getData());
-    			shell.setParas(tmp);
-    			shell.execCluster();
-            }
-        });
+
         
         if (des != null) {
         	TextField field = new TextField("Name");
@@ -54,6 +44,27 @@ public class OriginalDataView extends NavigationView {
         	field.setInputPrompt(des.get("name"));
         	content.addComponent(field);
 
+            field = new TextField("#Trials");
+            field.setEnabled(false);
+            field.setInputPrompt(des.get("trial"));
+            content.addComponent(field);
+
+            field = new TextField("#Sites");
+            field.setEnabled(false);
+            field.setInputPrompt(des.get("site"));
+            content.addComponent(field);
+
+            field = new TextField("#Trials with result");
+            field.setEnabled(false);
+            field.setInputPrompt(des.get("result"));
+            content.addComponent(field);
+
+            field = new TextField("#Population with result");
+            field.setEnabled(false);
+            field.setInputPrompt(des.get("population"));
+            content.addComponent(field);
+
+            /*
         	field = new TextField("Description");
         	field.setEnabled(false);
         	field.setInputPrompt(des.get("des"));
@@ -63,6 +74,7 @@ public class OriginalDataView extends NavigationView {
         	field.setEnabled(false);
         	field.setInputPrompt(des.get("num"));
         	content.addComponent(field);
+        	*/
 
         	final Button showButton = new Button("Show in Map");
         	showButton.setData(this.getData());
@@ -75,16 +87,15 @@ public class OriginalDataView extends NavigationView {
         		}
         	});
         	
-        	setContent(new CssLayout(content, showButton, submitButton));
+        	setContent(new CssLayout(content, showButton));
         } else {
-        	
-        	ShellExec shell = new ShellExec();
-    		ArrayList<String> tmp = new ArrayList<String>();
-			tmp.add((String)this.getData());
-			shell.setParas(tmp);
-			shell.execOriginal();
-			
-        	setContent(new CssLayout(content, submitButton));
+        	String str = "can not find the data" + (String)this.getData();
+        	System.err.println(str);
+            TextField field = new TextField();
+            field.setInputPrompt(str);
+            field.setEnabled(false);
+            content.addComponent(field);
+        	setContent(new CssLayout(content));
         }
         
     }

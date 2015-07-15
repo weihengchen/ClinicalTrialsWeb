@@ -41,7 +41,8 @@ import com.vaadin.ui.UI;
 public class ClinicalTrialsTouchKitUI extends UI {
 	private TabBarView tabBarView = null;
 	private MapView mapview = null;
-	private HadoopData hd = null;
+	//private HadoopData hd = null;
+    private MongodbData md = null;
 	private MenuView menuview = null;
 
     private final ClinicalTrialsPersistToServerRpc serverRpc = new ClinicalTrialsPersistToServerRpc() {
@@ -65,31 +66,35 @@ public class ClinicalTrialsTouchKitUI extends UI {
         offlineMode.setOfflineModeTimeout(15);
     }
     private void buildView() {
-    	hd = HadoopData.getInstance();
-    	
+    	//hd = HadoopData.getInstance();
+    	md = MongodbData.getInstance();
+
         tabBarView = new TabBarView();
-        final NavigationManager navigationManager = new NavigationManager();
+        //final NavigationManager navigationManager = new NavigationManager();
         //navigationManager.setCaption("Data");
-        navigationManager.setCurrentComponent(new MenuView());
+        //navigationManager.setCurrentComponent(new MenuView());
         Tab tab;
-        tab = tabBarView.addTab(navigationManager);
-        tab.setIcon(FontAwesome.DATABASE);
+        //tab = tabBarView.addTab(navigationManager);
+        //tab.setIcon(FontAwesome.DATABASE);
         
         final NavigationManager condManager = new NavigationManager();
         //navigationManager.setCaption("Data");
         condManager.setCurrentComponent(new ConditionsView());
         tab = tabBarView.addTab(condManager);
+        tab.setCaption("Conditions");
         tab.setIcon(FontAwesome.LIST);
         
         mapview = new MapView();
         tab = tabBarView.addTab(mapview);
         tab.setIcon(FontAwesome.MAP_MARKER);
+        tab.setCaption("Map");
         setContent(tabBarView);
     }
     
     public static ClinicalTrialsTouchKitUI getApp() {
     	return (ClinicalTrialsTouchKitUI) UI.getCurrent();
     }
+
     public void showDataSet(String data_set) {
     	mapview.updateClusterMap(data_set);
     	tabBarView.setSelectedTab(mapview);
@@ -101,7 +106,7 @@ public class ClinicalTrialsTouchKitUI extends UI {
     	return;
     }
     public void reloadData() {
-    	hd.reloadData();
+    	//hd.reloadData();
     	buildView();
     }
 }
