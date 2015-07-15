@@ -298,7 +298,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
                 continue;
             }
             visited.add(key);
-        	cMarker = new LCircleMarker(Double.parseDouble(tmp.get(0)), Double.parseDouble(tmp.get(1)), 5);
+        	cMarker = new LCircleMarker(Double.parseDouble(tmp.get(0)), Double.parseDouble(tmp.get(1)), 2);
     		cMarker.setColor(color);
     		//cMarker.setOpacity(0.90);
     		map.addComponent(cMarker);
