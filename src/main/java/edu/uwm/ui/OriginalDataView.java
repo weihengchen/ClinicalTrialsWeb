@@ -64,6 +64,11 @@ public class OriginalDataView extends NavigationView {
             field.setInputPrompt(des.get("population"));
             content.addComponent(field);
 
+            field = new TextField("#Sponsors");
+            field.setEnabled(false);
+            field.setInputPrompt(des.get("sponsors"));
+            content.addComponent(field);
+
             /*
         	field = new TextField("Description");
         	field.setEnabled(false);

@@ -2,6 +2,7 @@ package edu.uwm.data;
 
 import java.io.Serializable;
 import java.util.*;
+import static java.util.Arrays.asList;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
@@ -116,6 +117,117 @@ public class MongodbData implements Serializable {
         return sortedEntries;
     }
 
+    public Boolean getQueryData(HashMap<String, String> key, HashMap<String, String> des, ArrayList< ArrayList<String>> dataset) {
+        Document query = new Document();
+        if (!key.get("id").isEmpty()) {
+            System.out.println(key.get("id"));
+            query = new Document("$and", asList(query, new Document("clinical_study.id_info.nct_id", key.get("id"))));
+        }
+
+        if (!key.get("condition").isEmpty()) {
+            query = new Document("$and", asList(query, new Document("clinical_study.condition", key.get("condition"))));
+        }
+
+        if (!key.get("country").isEmpty()) {
+            query = new Document("$and", asList(query, new Document( "$or", asList(
+                                                                    new Document("location_countries.country", new Document("$in", key.get("condition"))),
+                                                                    new Document("location_countries.country", key.get("condition"))
+                                                                    ))
+            ));
+        }
+
+        /*
+        if (!key.get("drug").isEmpty()) {
+            query = new Document("$and", asList(query, new Document("clinical_study.id_info.nct_id", key.get("id"))));
+        }
+        */
+
+        MongoCollection<Document> mc = db.getCollection("trials");
+        MongoCursor<Document> cursor = mc.find(query)
+                .projection(fields(include("clinical_study.location", "clinical_study.clinical_results.baseline.population"
+                        , "clinical_study.sponsors.collaborator", "clinical_study.sponsors.lead_sponsor"), excludeId()))
+                .iterator();
+
+        HashSet<String> sponsors = new HashSet<String>();
+        //description
+        Integer trial = 0, sites = 0, result = 0, result_pop = 0;
+        ArrayList<ArrayList <String> > points = dataset;
+        try {
+            while(cursor.hasNext()) {
+                Document doc = cursor.next();
+                trial++;
+                try {
+                    JSONObject json = new JSONObject(doc.toJson());
+                    JSONObject study = json.optJSONObject("clinical_study");
+                    JSONObject sp = study.optJSONObject("sponsors");
+                    if (sp != null) {
+                        JSONObject leader = sp.optJSONObject("lead_sponsor");
+                        if (leader != null) {
+                            sponsors.add(leader.optString("agency"));
+                        }
+                        JSONArray coll = sp.optJSONArray("collaborator");
+                        if (coll != null) {
+                            for (int i = 0; i < coll.length(); i++) {
+                                sponsors.add(coll.getJSONObject(i).optString("agency"));
+                            }
+                        } else {
+                            JSONObject c = sp.optJSONObject("collaborator");
+                            if (c != null) {
+                                sponsors.add(c.optString("agency"));
+                            }
+                        }
+                    }
+                    if (study.optJSONArray("location") != null) {
+                        JSONArray jr = study.optJSONArray("location");
+                        int i;
+                        for (i=0; i<jr.length(); i++) {
+                            sites++;
+                            JSONObject fac = jr.optJSONObject(i).optJSONObject("facility");
+                            if (fac != null) {
+                                ArrayList<String> tmp = new ArrayList<String>();
+                                tmp.add(Double.toString(fac.optDouble("latitude")));
+                                tmp.add(Double.toString(fac.optDouble("longitude")));
+                                points.add(tmp);
+                            }
+                        }
+                    } else {
+                        JSONObject js = study.optJSONObject("location");
+                        if (js != null) {
+                            sites++;
+                            JSONObject fac = js.optJSONObject("facility");
+                            if (fac != null) {
+                                ArrayList<String> tmp = new ArrayList<String>();
+                                tmp.add(Double.toString(fac.optDouble("latitude")));
+                                tmp.add(Double.toString(fac.optDouble("longitude")));
+                                points.add(tmp);
+                            }
+                        }
+                    }
+                    JSONObject res = study.optJSONObject("clinical_results");
+                    if (res != null) {
+                        result++;
+                        JSONObject bl = res.optJSONObject("baseline");
+                        if (bl != null) {
+                            int pop = bl.optInt("population");
+                            result_pop += pop;
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            des.put("trial", trial.toString());
+            des.put("site", sites.toString());
+            des.put("result", result.toString());
+            des.put("population", result_pop.toString());
+            des.put("sponsors", Integer.toString(sponsors.size()));
+        } finally {
+            cursor.close();
+        }
+        return true;
+    }
+
     private HashMap<String, HashMap<String,String> > original_name2des = null;
     public HashMap<String, String> getOriginalDes(String key) {
         if (!original_name2des.containsKey(key)) {
@@ -129,8 +241,10 @@ public class MongodbData implements Serializable {
     private Boolean readOriginalData(String key) {
         MongoCollection<Document> mc = db.getCollection("trials");
         MongoCursor<Document> cursor = mc.find(and(exists("clinical_study.location"), or(eq("clinical_study.condition",key), in("clinical_study.condition", key))))
-                .projection(fields(include("clinical_study.location", "clinical_study.clinical_results.baseline.population"), excludeId()))
+                .projection(fields(include("clinical_study.location", "clinical_study.clinical_results.baseline.population"
+                        , "clinical_study.sponsors.collaborator", "clinical_study.sponsors.lead_sponsor"), excludeId()))
                 .iterator();
+        HashSet<String> sponsors = new HashSet<String>();
         //description
         String name = key;
         Integer trial = 0, sites = 0, result = 0, result_pop = 0;
@@ -142,6 +256,24 @@ public class MongodbData implements Serializable {
                 try {
                     JSONObject json = new JSONObject(doc.toJson());
                     JSONObject study = json.optJSONObject("clinical_study");
+                    JSONObject sp = study.optJSONObject("sponsors");
+                    if (sp != null) {
+                        JSONObject leader = sp.optJSONObject("lead_sponsor");
+                        if (leader != null) {
+                            sponsors.add(leader.optString("agency"));
+                        }
+                        JSONArray coll = sp.optJSONArray("collaborator");
+                        if (coll != null) {
+                            for (int i = 0; i < coll.length(); i++) {
+                                sponsors.add(coll.getJSONObject(i).optString("agency"));
+                            }
+                        } else {
+                            JSONObject c = sp.optJSONObject("collaborator");
+                            if (c != null) {
+                                sponsors.add(c.optString("agency"));
+                            }
+                        }
+                    }
                     if (study.optJSONArray("location") != null) {
                        JSONArray jr = study.optJSONArray("location");
                         int i;
@@ -186,6 +318,7 @@ public class MongodbData implements Serializable {
             dat.put("site", sites.toString());
             dat.put("result", result.toString());
             dat.put("population", result_pop.toString());
+            dat.put("sponsors", Integer.toString(sponsors.size()));
             original_name2des.put(key, dat);
             original_name2dataset.put(key, points);
         } finally {
@@ -205,4 +338,5 @@ public class MongodbData implements Serializable {
         }
         return original_name2dataset.get(key);
     }
+
 }

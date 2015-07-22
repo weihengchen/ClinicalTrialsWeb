@@ -2,6 +2,7 @@ package edu.uwm;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import org.vaadin.addon.leaflet.LCircleMarker;
@@ -70,12 +71,13 @@ public class ClinicalTrialsTouchKitUI extends UI {
     	md = MongodbData.getInstance();
 
         tabBarView = new TabBarView();
-        //final NavigationManager navigationManager = new NavigationManager();
-        //navigationManager.setCaption("Data");
-        //navigationManager.setCurrentComponent(new MenuView());
+        final NavigationManager navigationManager = new NavigationManager();
+        navigationManager.setCaption("Query");
+        navigationManager.setCurrentComponent(new MenuView());
         Tab tab;
-        //tab = tabBarView.addTab(navigationManager);
-        //tab.setIcon(FontAwesome.DATABASE);
+        tab = tabBarView.addTab(navigationManager);
+        tab.setCaption("Query");
+        tab.setIcon(FontAwesome.SEARCH);
         
         final NavigationManager condManager = new NavigationManager();
         //navigationManager.setCaption("Data");
@@ -105,9 +107,12 @@ public class ClinicalTrialsTouchKitUI extends UI {
     	tabBarView.setSelectedTab(mapview);
     	return;
     }
-    public void reloadData() {
+    public void queryData(HashMap<String, HashMap<String, String> >des, HashMap<String, ArrayList<ArrayList<String> > > dataset) {
     	//hd.reloadData();
-    	buildView();
+    	//buildView();
+        mapview.updateQueryMap(des, dataset);
+        tabBarView.setSelectedTab(mapview);
+        return;
     }
 }
 

@@ -2,15 +2,10 @@ package edu.uwm.ui;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.BooleanSupplier;
 
 import edu.uwm.data.MongodbData;
-import org.vaadin.addon.leaflet.LCircleMarker;
-import org.vaadin.addon.leaflet.LMap;
-import org.vaadin.addon.leaflet.LMarker;
-import org.vaadin.addon.leaflet.LPolyline;
-import org.vaadin.addon.leaflet.LTileLayer;
-import org.vaadin.addon.leaflet.LeafletClickEvent;
-import org.vaadin.addon.leaflet.LeafletClickListener;
+import org.vaadin.addon.leaflet.*;
 import org.vaadin.addon.leaflet.control.LZoom;
 import org.vaadin.addon.leaflet.control.LScale;
 import org.vaadin.addon.leaflet.shared.Point;
@@ -136,7 +131,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
         
         zoom_level = 3;
         map.setZoomLevel(zoom_level);
-        map.setCenter(new Point(43.041809,-87.906837));
+        map.setCenter(new Point(43.041809, -87.906837));
         
         HadoopData hd = HadoopData.getInstance();
         ArrayList< ArrayList<String> > dataset = hd.getClusterDataSet(dataset_key);
@@ -260,6 +255,48 @@ public class MapView extends CssLayout implements LeafletClickListener{
         	popUp(((LCircleMarker) o).getData());
         }
     }
+
+	public Boolean updateQueryMap(HashMap<String, HashMap<String, String> >des, HashMap<String, ArrayList<ArrayList<String> > > dataset) {
+		if (map == null) {
+			buildView();
+		}
+		Iterator<Component> iterator = map.iterator();
+		Collection<Component> remove = new ArrayList<Component>();
+		while (iterator.hasNext()) {
+			Component next = iterator.next();
+			if (next instanceof LCircleMarker || next instanceof LPolyline) {
+				remove.add(next);
+			}
+		}
+		for (Component component : remove) {
+			map.removeComponent(component);
+		}
+
+		zoom_level = 3;
+		map.setZoomLevel(zoom_level);
+		map.setCenter(new Point(43.041809,-87.906837));
+
+		for (HashMap.Entry<String, HashMap<String, String> > entry : des.entrySet()) {
+			HashSet<String> visited = new HashSet<String>();
+
+			LCircleMarker cMarker = null;
+			String color = "#" + entry.getValue().get("color");
+
+			for (ArrayList<String> tmp : dataset.get(entry.getKey())) {
+				String key = tmp.get(0) + tmp.get(1);
+				if (visited.contains(key)) {
+					continue;
+				}
+				visited.add(key);
+				cMarker = new LCircleMarker(Double.parseDouble(tmp.get(0)), Double.parseDouble(tmp.get(1)), 2);
+				cMarker.setColor(color);
+				//cMarker.setOpacity(0.90);
+				map.addComponent(cMarker);
+			}
+		}
+
+		return true;
+	}
     
 
     public Boolean updateOriginalMap(String dataset_key) {
@@ -290,7 +327,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
         HashSet<String> visited = new HashSet<String>();
         
         LCircleMarker cMarker = null;
-        String color = "FFFFFF";
+        String color = "#FFFFFF";
         
         for (ArrayList<String> tmp : dataset) {
             String key = tmp.get(0) + tmp.get(1);
