@@ -2,7 +2,7 @@ package edu.uwm.ui;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.function.BooleanSupplier;
+//import java.util.function.BooleanSupplier;
 
 import edu.uwm.data.MongodbData;
 import org.vaadin.addon.leaflet.*;
@@ -276,7 +276,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
 		map.setZoomLevel(zoom_level);
 		map.setCenter(new Point(43.041809,-87.906837));
 
-		for (HashMap.Entry<String, HashMap<String, String> > entry : des.entrySet()) {
+		for (Map.Entry<String, HashMap<String, String> > entry : des.entrySet()) {
 			HashSet<String> visited = new HashSet<String>();
 
 			LCircleMarker cMarker = null;

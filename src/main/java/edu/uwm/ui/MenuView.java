@@ -3,6 +3,7 @@ package edu.uwm.ui;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import com.vaadin.addon.touchkit.ui.NavigationButton;
 import com.vaadin.addon.touchkit.ui.NavigationButton.NavigationButtonClickEvent;
@@ -91,7 +92,7 @@ public class MenuView extends NavigationView {
         */
     }
     public void addQuery(HashMap<String, String> query) {
-        for(HashMap.Entry<String,String> entry : query.entrySet()) {
+        for(Map.Entry<String,String> entry : query.entrySet()) {
             System.out.println(entry.getKey() + '\t' + entry.getValue());
         }
         NavigationButton btn = new NavigationButton(query.get("name"));
@@ -110,7 +111,7 @@ public class MenuView extends NavigationView {
         datasets.put(query.get("name"), dataset);
         buttons.put(query.get("name"), btn);
         content.removeAllComponents();
-        for (HashMap.Entry<String, NavigationButton> i : buttons.entrySet()) {
+        for (Map.Entry<String, NavigationButton> i : buttons.entrySet()) {
             content.addComponent(i.getValue());
         }
 
@@ -134,7 +135,7 @@ public class MenuView extends NavigationView {
         descriptions.remove(str);
         datasets.remove(str);
         content.removeAllComponents();
-        for (HashMap.Entry<String, NavigationButton> i : buttons.entrySet()) {
+        for (Map.Entry<String, NavigationButton> i : buttons.entrySet()) {
             content.addComponent(i.getValue());
         }
         setContent(new CssLayout(content, load));
