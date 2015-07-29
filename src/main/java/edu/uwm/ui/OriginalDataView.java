@@ -41,32 +41,32 @@ public class OriginalDataView extends NavigationView {
         if (des != null) {
         	TextField field = new TextField("Name");
         	field.setEnabled(false);
-        	field.setInputPrompt(des.get("name"));
+        	field.setValue(des.get("name"));
         	content.addComponent(field);
 
             field = new TextField("#Trials");
             field.setEnabled(false);
-            field.setInputPrompt(des.get("trial"));
+            field.setValue(des.get("trial"));
             content.addComponent(field);
 
             field = new TextField("#Sites");
             field.setEnabled(false);
-            field.setInputPrompt(des.get("site"));
+            field.setValue(des.get("site"));
             content.addComponent(field);
 
             field = new TextField("#Trials with result");
             field.setEnabled(false);
-            field.setInputPrompt(des.get("result"));
+            field.setValue(des.get("result"));
             content.addComponent(field);
 
             field = new TextField("#Population with result");
             field.setEnabled(false);
-            field.setInputPrompt(des.get("population"));
+            field.setValue(des.get("population"));
             content.addComponent(field);
 
             field = new TextField("#Sponsors");
             field.setEnabled(false);
-            field.setInputPrompt(des.get("sponsors"));
+            field.setValue(des.get("sponsors"));
             content.addComponent(field);
 
             /*

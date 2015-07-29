@@ -8,6 +8,7 @@ import com.vaadin.server.Page;
 import com.vaadin.ui.*;
 import edu.uwm.ClinicalTrialsTouchKitUI;
 import edu.uwm.data.HadoopData;
+import edu.uwm.data.MongodbData;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -58,9 +59,9 @@ public class QueryForm extends NavigationView {
         country.setEnabled(true);
         content.addComponent(country);
 
-        final TextField drug = new TextField("Drug:");
-        drug.setEnabled(true);
-        content.addComponent(drug);
+        final TextField intervention = new TextField("Intervention:");
+        intervention.setEnabled(true);
+        content.addComponent(intervention);
 
         final TextField id = new TextField("NCT_ID:");
         id.setEnabled(true);
@@ -90,12 +91,16 @@ public class QueryForm extends NavigationView {
             submitButton.addClickListener(new Button.ClickListener() {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
+                    MongodbData md = MongodbData.getInstance();
+                    if (md.sameQueryName(name.getValue())) {
+                        return;
+                    }
                     MenuView mv = (MenuView) par;
                     HashMap<String, String> paras = new HashMap<String, String>();
                     paras.put("name", name.getValue());
                     paras.put("condition", cond.getValue());
                     paras.put("country", country.getValue());
-                    paras.put("drug", drug.getValue());
+                    paras.put("intervention", intervention.getValue());
                     paras.put("id", id.getValue());
                     paras.put("color", color.getValue());
                     mv.addQuery(paras);
@@ -113,8 +118,8 @@ public class QueryForm extends NavigationView {
             cond.setEnabled(false);
             country.setValue(data.get("country"));
             country.setEnabled(false);
-            drug.setValue(data.get("drug"));
-            drug.setEnabled(false);
+            intervention.setValue(data.get("intervention"));
+            intervention.setEnabled(false);
             id.setValue(data.get("id"));
             id.setEnabled(false);
             color.setValue(data.get("color"));
@@ -124,27 +129,27 @@ public class QueryForm extends NavigationView {
 
             TextField field = new TextField("#Trials");
             field.setEnabled(false);
-            field.setInputPrompt(data.get("trial"));
+            field.setValue(data.get("trial"));
             content.addComponent(field);
 
             field = new TextField("#Sites");
             field.setEnabled(false);
-            field.setInputPrompt(data.get("site"));
+            field.setValue(data.get("site"));
             content.addComponent(field);
 
             field = new TextField("#Trials with result");
             field.setEnabled(false);
-            field.setInputPrompt(data.get("result"));
+            field.setValue(data.get("result"));
             content.addComponent(field);
 
             field = new TextField("#Population with result");
             field.setEnabled(false);
-            field.setInputPrompt(data.get("population"));
+            field.setValue(data.get("population"));
             content.addComponent(field);
 
             field = new TextField("#Sponsors");
             field.setEnabled(false);
-            field.setInputPrompt(data.get("sponsors"));
+            field.setValue(data.get("sponsors"));
             content.addComponent(field);
 
             final Button submitButton = new Button("Remove");
@@ -152,7 +157,7 @@ public class QueryForm extends NavigationView {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
                     MenuView mv = (MenuView)getNavigationManager().getPreviousComponent();
-                    mv.removeQuery(data.get("index"));
+                    mv.removeQuery(data.get("name"));
                     getNavigationManager().navigateBack();
                     return;
                 }

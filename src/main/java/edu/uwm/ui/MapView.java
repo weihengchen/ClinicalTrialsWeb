@@ -4,6 +4,10 @@ import java.io.Serializable;
 import java.util.*;
 //import java.util.function.BooleanSupplier;
 
+import com.vaadin.server.Page;
+import com.vaadin.ui.*;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import edu.uwm.data.MongodbData;
 import org.vaadin.addon.leaflet.*;
 import org.vaadin.addon.leaflet.control.LZoom;
@@ -17,14 +21,8 @@ import com.vaadin.addon.touchkit.ui.Popover;
 import com.vaadin.addon.touchkit.ui.VerticalComponentGroup;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.server.ThemeResource;
-import com.vaadin.ui.AbstractComponent;
-import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.CssLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vividsolutions.jts.geom.LineString;
 
@@ -33,6 +31,8 @@ import edu.uwm.data.HadoopData;
 public class MapView extends CssLayout implements LeafletClickListener{
 
     private LMap map = null;
+	private Label label = null;
+	private HashMap<String, ArrayList<ArrayList <String> > > point2data = new HashMap<String, ArrayList<ArrayList<String>>>();
     private int zoom_level;
     private ArrayList<String> color_panel = new ArrayList<String>(Arrays.asList("#801FEF","#7C1DEF","#771CF0","#721AF2",
     		"#6B1AF2","#6718F2","#6016F4","#5B15F4","#5613F4","#5011F6",
@@ -102,15 +102,54 @@ public class MapView extends CssLayout implements LeafletClickListener{
         map.addLayer(mapBoxTiles);
 
         map.setAttributionPrefix("Powered by <a href=\"leafletjs.com\">Leaflet</a> — &copy; <a href='http://osm.org/copyright'>OpenStreetMap</a> contributors");
-
-        map.setImmediate(true);
+		map.setImmediate(true);
 
         map.setSizeFull();
-        zoom_level = 3;
+        zoom_level = 1;
         map.setZoomLevel(zoom_level);
-        map.setCenter(new Point(43.041809,-87.906837));
-        
-        addComponent(map);
+        map.setCenter(new Point(43.041809, -87.906837));
+		map.addMoveEndListener(new LeafletMoveEndListener() {
+			@Override
+			public void onMoveEnd(LeafletMoveEndEvent event) {
+				double nelat = map.getBounds().getNorthEastLat();
+				double nelon = map.getBounds().getNorthEastLon();
+				double swlat = map.getBounds().getSouthWestLat();
+				double swlon = map.getBounds().getSouthWestLon();
+				//System.out.println(nelat);
+				//System.out.println(nelon);
+				//System.out.println(swlat);
+				//System.out.println(swlon);
+
+				int level = map.getZoomLevel();
+				int r = 1;
+				if (level <= 3) r = 1;
+				else if (level <= 7) r = 2;
+				else r = 5;
+
+				int count = 0;
+
+				Iterator<Component> iterator = map.iterator();
+				while (iterator.hasNext()) {
+					Component next = iterator.next();
+					if (next instanceof LCircleMarker) {
+						LCircleMarker tmp = (LCircleMarker) next;
+						double lat = tmp.getPoint().getLat();
+						double lon = tmp.getPoint().getLon();
+						if (lat <= nelat && lat >= swlat && lon <= nelon && lon >= swlon) count+=point2data.get((String)tmp.getData()).size();
+						tmp.setRadius(r);
+					}
+				}
+				label.setValue("#Sites:"+Integer.toString(count));
+			}
+		});
+
+		label = new Label();
+		Page.Styles style = Page.getCurrent().getStyles();
+		style.add(".flow-z {position:absolute; right:0px; z-index:1; text-align:right; word-wrap:break-word;}");
+		label.setPrimaryStyleName("flow-z");
+		label.setWidth("80%");
+		addComponent(label);
+		addComponent(map);
     }
     
     public Boolean updateClusterMap(String dataset_key) {
@@ -210,18 +249,23 @@ public class MapView extends CssLayout implements LeafletClickListener{
         }
     	return true;
     }
+	/*
+	@Override
+	public void onClick (final LeafletClickEvent event) {
+		Object o = event.getSource();
+		System.out.println(o.getClass().toString());
+		if (o instanceof LCircleMarker) {
+			popUp((String) ((LCircleMarker) o).getData());
+		}
+	}
+	*/
 
-    private void popUp(Object para) {
-    	ArrayList< ArrayList<String>> data = null;
-    	if (!(para instanceof ArrayList<?>)) {
-    		return;
-    	}
-    	data = (ArrayList<ArrayList<String> >) para;
+    private void popUp(String key) {
     	Popover pover = new Popover();
     	pover.addStyleName("Detail");
 
         VerticalComponentGroup detailsGroup = new VerticalComponentGroup();
-        Label title = new Label(Integer.toString(data.size()));
+        Label title = new Label("#Sites:" + Integer.toString(point2data.get(key).size()));
         detailsGroup.addComponent(title);
 
         //detailsGroup.addComponent(buildTicketLayout(ticket));
@@ -247,16 +291,9 @@ public class MapView extends CssLayout implements LeafletClickListener{
         pover.setClosable(true);
         pover.showRelativeTo(this);
     }
-    
-    @Override
-    public void onClick(final LeafletClickEvent event) {
-    	Object o = event.getSource();
-        if (o instanceof LCircleMarker) {
-        	popUp(((LCircleMarker) o).getData());
-        }
-    }
 
 	public Boolean updateQueryMap(HashMap<String, HashMap<String, String> >des, HashMap<String, ArrayList<ArrayList<String> > > dataset) {
+		point2data.clear();
 		if (map == null) {
 			buildView();
 		}
@@ -272,34 +309,47 @@ public class MapView extends CssLayout implements LeafletClickListener{
 			map.removeComponent(component);
 		}
 
-		zoom_level = 3;
+		zoom_level = 1;
 		map.setZoomLevel(zoom_level);
 		map.setCenter(new Point(43.041809,-87.906837));
+		int count = 0;
 
 		for (Map.Entry<String, HashMap<String, String> > entry : des.entrySet()) {
 			HashSet<String> visited = new HashSet<String>();
 
 			LCircleMarker cMarker = null;
 			String color = "#" + entry.getValue().get("color");
-
+			count += dataset.get(entry.getKey()).size();
 			for (ArrayList<String> tmp : dataset.get(entry.getKey())) {
 				String key = tmp.get(0) + tmp.get(1);
 				if (visited.contains(key)) {
+					if (!point2data.containsKey(key))
+						point2data.put(key, new ArrayList<ArrayList<String>>());
+					point2data.get(key).add(tmp);
 					continue;
 				}
 				visited.add(key);
-				cMarker = new LCircleMarker(Double.parseDouble(tmp.get(0)), Double.parseDouble(tmp.get(1)), 2);
+				cMarker = new LCircleMarker(Double.parseDouble(tmp.get(0)), Double.parseDouble(tmp.get(1)), 1);
+				cMarker.setData(key);
+				if (!point2data.containsKey(key))
+					point2data.put(key, new ArrayList<ArrayList<String>>());
+				point2data.get(key).add(tmp);
 				cMarker.setColor(color);
-				//cMarker.setOpacity(0.90);
+				cMarker.setFillColor(color);
+				cMarker.setFillOpacity(0.5);
+				cMarker.setOpacity(0.50);
+				cMarker.addClickListener(this);
 				map.addComponent(cMarker);
 			}
 		}
+		label.setValue("#Sites:" + Integer.toString(count));
 
 		return true;
 	}
     
 
     public Boolean updateOriginalMap(String dataset_key) {
+		point2data.clear();
     	if (map == null) {
     		buildView();
     	}
@@ -315,32 +365,54 @@ public class MapView extends CssLayout implements LeafletClickListener{
             map.removeComponent(component);
         }
         
-        zoom_level = 3;
+        zoom_level = 1;
         map.setZoomLevel(zoom_level);
-        map.setCenter(new Point(43.041809,-87.906837));
+        map.setCenter(new Point(43.041809, -87.906837));
         
         //HadoopData hd = HadoopData.getInstance();
         //ArrayList< ArrayList<String> > dataset = hd.getOriginalDataSet(dataset_key);
         MongodbData md = MongodbData.getInstance();
 		ArrayList< ArrayList<String> > dataset = md.getOriginalDataSet(dataset_key);
 
+		label.setValue("#Sites:" + Integer.toString(dataset.size()));
+
         HashSet<String> visited = new HashSet<String>();
         
         LCircleMarker cMarker = null;
-        String color = "#FFFFFF";
+        String color = "#000000";
         
         for (ArrayList<String> tmp : dataset) {
             String key = tmp.get(0) + tmp.get(1);
             if (visited.contains(key)) {
+				if (!point2data.containsKey(key))
+					point2data.put(key, new ArrayList<ArrayList<String>>());
+				point2data.get(key).add(tmp);
                 continue;
             }
             visited.add(key);
-        	cMarker = new LCircleMarker(Double.parseDouble(tmp.get(0)), Double.parseDouble(tmp.get(1)), 2);
-    		cMarker.setColor(color);
-    		//cMarker.setOpacity(0.90);
+        	cMarker = new LCircleMarker(Double.parseDouble(tmp.get(0)), Double.parseDouble(tmp.get(1)), 1);
+			cMarker.setData(key);
+			cMarker.setColor(color);
+			cMarker.setFillColor(color);
+			cMarker.setFillOpacity(0.50);
+    		cMarker.setOpacity(0.50);
+			cMarker.addClickListener(this);
     		map.addComponent(cMarker);
+
+			if (!point2data.containsKey(key))
+				point2data.put(key, new ArrayList<ArrayList<String>>());
+			point2data.get(key).add(tmp);
         }
         
         return true;
     }
+
+	@Override
+	public void onClick(LeafletClickEvent event) {
+		Object o = event.getSource();
+		System.out.println(o.getClass().toString());
+		if (o instanceof LCircleMarker) {
+			popUp((String) ((LCircleMarker) o).getData());
+		}
+	}
 }
