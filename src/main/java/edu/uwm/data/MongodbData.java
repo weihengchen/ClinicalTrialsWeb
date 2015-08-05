@@ -122,7 +122,7 @@ public class MongodbData implements Serializable {
         MongoCollection<Document> mc = db.getCollection("trials");
         MongoCursor<Document> cursor = mc.find(query)
                 .projection(fields(include("clinical_study.location", "clinical_study.clinical_results.baseline.measure_list"
-                        , "clinical_study.sponsors.collaborator", "clinical_study.sponsors.lead_sponsor", "clinical_study.id_info.nct_id"), excludeId()))
+                        , "clinical_study.intervention.intervention_name", "clinical_study.sponsors.collaborator", "clinical_study.sponsors.lead_sponsor", "clinical_study.id_info.nct_id"), excludeId()))
                 .iterator();
 
         HashSet<String> sponsors = new HashSet<String>();
@@ -134,8 +134,19 @@ public class MongodbData implements Serializable {
                 Document doc = cursor.next();
                 trial++;
                 try {
+                    ArrayList<String> intervention = new ArrayList<String>();
                     JSONObject json = new JSONObject(doc.toJson());
                     JSONObject study = json.optJSONObject("clinical_study");
+                    String nct = study.optJSONObject("id_info").optString("nct_id");
+                    if (study.optJSONArray("intervention") != null) {
+                        JSONArray arr_intervention = study.optJSONArray("intervention");
+                        int i;
+                        for (i=0; i<arr_intervention.length(); i++) {
+                            intervention.add(arr_intervention.getJSONObject(i).getString("intervention_name"));
+                        }
+                    } else if (study.optJSONObject("intervention") != null) {
+                        intervention.add(study.optJSONObject("intervention").getString("intervention_name"));
+                    }
                     JSONObject sp = study.optJSONObject("sponsors");
                     if (sp != null) {
                         JSONObject leader = sp.optJSONObject("lead_sponsor");
@@ -169,6 +180,11 @@ public class MongodbData implements Serializable {
                                 ArrayList<String> tmp = new ArrayList<String>();
                                 tmp.add(Double.toString(fac.optDouble("latitude")));
                                 tmp.add(Double.toString(fac.optDouble("longitude")));
+                                tmp.add(des.get("name"));
+                                tmp.add(nct);
+                                for (int j=0; j<intervention.size(); j++) {
+                                    tmp.add(intervention.get(j));
+                                }
                                 points.add(tmp);
                             }
                         }
@@ -183,6 +199,11 @@ public class MongodbData implements Serializable {
                                     ArrayList<String> tmp = new ArrayList<String>();
                                     tmp.add(Double.toString(fac.optDouble("latitude")));
                                     tmp.add(Double.toString(fac.optDouble("longitude")));
+                                    tmp.add(des.get("name"));
+                                    tmp.add(nct);
+                                    for (int j=0; j<intervention.size(); j++) {
+                                        tmp.add(intervention.get(j));
+                                    }
                                     points.add(tmp);
                                 }
                             }
@@ -192,7 +213,6 @@ public class MongodbData implements Serializable {
                     JSONObject tmp;
                     JSONArray res;
                     int pop = 0;
-                    String nct = study.optJSONObject("id_info").optString("nct_id");
                     while (true) {
                         tmp = study.optJSONObject("clinical_results");
                         if (tmp == null) break;
@@ -251,8 +271,8 @@ public class MongodbData implements Serializable {
         Document query = new Document("clinical_study.condition", key);
         HashMap<String, String> dat = new HashMap<String, String>();
         ArrayList<ArrayList <String> > points = new ArrayList<ArrayList<String>>();
-        getGeoLocations(query, dat, points, "");
         dat.put("name", key);
+        getGeoLocations(query, dat, points, "");
         original_name2des.put(key, dat);
         original_name2dataset.put(key, points);
         //geographical information
@@ -300,8 +320,8 @@ public class MongodbData implements Serializable {
         HashMap<String, String> des = new HashMap<String, String>();
         ArrayList< ArrayList<String>> dataset = new ArrayList<ArrayList<String>>();
 
-        getGeoLocations(query, des, dataset, key.get("country"));
         des.putAll(key);
+        getGeoLocations(query, des, dataset, key.get("country"));
         descriptions.put(key.get("name"), des);
         datasets.put(key.get("name"), dataset);
         return true;

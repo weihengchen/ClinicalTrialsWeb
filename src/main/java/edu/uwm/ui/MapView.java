@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.*;
 //import java.util.function.BooleanSupplier;
 
+import com.sun.corba.se.impl.encoding.OSFCodeSetRegistry;
 import com.vaadin.server.Page;
 import com.vaadin.ui.*;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -31,7 +32,8 @@ import edu.uwm.data.HadoopData;
 public class MapView extends CssLayout implements LeafletClickListener{
 
     private LMap map = null;
-	private Label label = null;
+	//private Label label = null;
+	private TextArea label = null;
 	private HashMap<String, ArrayList<ArrayList <String> > > point2data = new HashMap<String, ArrayList<ArrayList<String>>>();
     private int zoom_level;
     private ArrayList<String> color_panel = new ArrayList<String>(Arrays.asList("#801FEF","#7C1DEF","#771CF0","#721AF2",
@@ -98,16 +100,16 @@ public class MapView extends CssLayout implements LeafletClickListener{
         		//"https://a.tiles.mapbox.com/v4/weiheng.kp1naddf/page.html?access_token=pk.eyJ1Ijoid2VpaGVuZyIsImEiOiJxRXhVT2pVIn0.NLDHWGkfoNQRysu3wKBoiA#4/43.04/-87.91");
         		"http://a.tiles.mapbox.com/v4/weiheng.kp1naddf/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoid2VpaGVuZyIsImEiOiJxRXhVT2pVIn0.NLDHWGkfoNQRysu3wKBoiA");
         		//"http://{s}.tiles.mapbox.com/v3/vaadin.i1pikm9o/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoid2VpaGVuZyIsImEiOiJxRXhVT2pVIn0.NLDHWGkfoNQRysu3wKBoiA");
-        mapBoxTiles.setDetectRetina(true);
-        map.addLayer(mapBoxTiles);
+		mapBoxTiles.setDetectRetina(true);
+		map.addLayer(mapBoxTiles);
 
-        map.setAttributionPrefix("Powered by <a href=\"leafletjs.com\">Leaflet</a> — &copy; <a href='http://osm.org/copyright'>OpenStreetMap</a> contributors");
+		map.setAttributionPrefix("Powered by <a href=\"leafletjs.com\">Leaflet</a> — &copy; <a href='http://osm.org/copyright'>OpenStreetMap</a> contributors");
 		map.setImmediate(true);
 
         map.setSizeFull();
         zoom_level = 1;
-        map.setZoomLevel(zoom_level);
-        map.setCenter(new Point(43.041809, -87.906837));
+		map.setZoomLevel(zoom_level);
+		map.setCenter(new Point(43.041809, -87.906837));
 		map.addMoveEndListener(new LeafletMoveEndListener() {
 			@Override
 			public void onMoveEnd(LeafletMoveEndEvent event) {
@@ -126,7 +128,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
 				else if (level <= 7) r = 2;
 				else r = 5;
 
-				int count = 0;
+				ArrayList<ArrayList <String> > tmp_data = new ArrayList<ArrayList<String>>();
 
 				Iterator<Component> iterator = map.iterator();
 				while (iterator.hasNext()) {
@@ -135,17 +137,44 @@ public class MapView extends CssLayout implements LeafletClickListener{
 						LCircleMarker tmp = (LCircleMarker) next;
 						double lat = tmp.getPoint().getLat();
 						double lon = tmp.getPoint().getLon();
-						if (lat <= nelat && lat >= swlat && lon <= nelon && lon >= swlon) count+=point2data.get((String)tmp.getData()).size();
+						if (lat <= nelat && lat >= swlat && lon <= nelon && lon >= swlon)
+							tmp_data.addAll(point2data.get((String)tmp.getData()));
 						tmp.setRadius(r);
 					}
 				}
-				label.setValue("#Sites:"+Integer.toString(count));
+				HashMap<String, Integer> name = new HashMap<String, Integer>();
+				HashMap<String, HashSet<String> > trial = new HashMap<String, HashSet<String>>();
+				HashMap<String, HashSet<String> > intervention = new HashMap<String, HashSet<String>>();
+				int i, j;
+				for (i=0; i<tmp_data.size(); i++) {
+					String t_name = tmp_data.get(i).get(2);
+					if (!name.containsKey(t_name) ) {
+						name.put(t_name, new Integer(0));
+						trial.put(t_name, new HashSet<String>());
+						intervention.put(t_name, new HashSet<String>());
+					}
+					name.put(t_name, name.get(t_name) + 1);
+					trial.get(t_name).add(tmp_data.get(i).get(3));
+					for (j=4; j<tmp_data.get(i).size(); j++) {
+						intervention.get(t_name).add(tmp_data.get(i).get(j));
+					}
+				}
+				String label_text = "";
+				for (Map.Entry<String, Integer> entry : name.entrySet()) {
+					label_text = label_text + "Name:" + entry.getKey() + "\n" +
+							"#Trials:" + Integer.toString(trial.get(entry.getKey()).size()) + "\n" +
+							"#Sites:" + Integer.toString(entry.getValue()) + "\n" +
+							"#Intervention:" + Integer.toString(intervention.get(entry.getKey()).size()) + "\n";
+				}
+				label.setValue(label_text);
+
 			}
 		});
 
-		label = new Label();
+		//label = new Label();
+		label = new TextArea();
 		Page.Styles style = Page.getCurrent().getStyles();
-		style.add(".flow-z {position:absolute; right:0px; z-index:1; text-align:right; word-wrap:break-word;}");
+		style.add(".flow-z {position:absolute; right:0px; z-index:1; text-align:right; background-color:transparent; border-style:none;}");
 		label.setPrimaryStyleName("flow-z");
 		label.setWidth("80%");
 		addComponent(label);
@@ -265,8 +294,38 @@ public class MapView extends CssLayout implements LeafletClickListener{
     	pover.addStyleName("Detail");
 
         VerticalComponentGroup detailsGroup = new VerticalComponentGroup();
-        Label title = new Label("#Sites:" + Integer.toString(point2data.get(key).size()));
+        Label title = new Label("Detail");
         detailsGroup.addComponent(title);
+
+		ArrayList<ArrayList <String> > tmp_data = point2data.get(key);
+		HashMap<String, Integer> name = new HashMap<String, Integer>();
+		HashMap<String, HashSet<String> > trial = new HashMap<String, HashSet<String>>();
+		HashMap<String, HashSet<String> > intervention = new HashMap<String, HashSet<String>>();
+		int i, j;
+		for (i=0; i<tmp_data.size(); i++) {
+			String t_name = tmp_data.get(i).get(2);
+			if (!name.containsKey(t_name) ) {
+				name.put(t_name, new Integer(0));
+				trial.put(t_name, new HashSet<String>());
+				intervention.put(t_name, new HashSet<String>());
+			}
+			name.put(t_name, name.get(t_name) + 1);
+			trial.get(t_name).add(tmp_data.get(i).get(3));
+			for (j=4; j<tmp_data.get(i).size(); j++) {
+				intervention.get(t_name).add(tmp_data.get(i).get(j));
+			}
+		}
+
+		for (Map.Entry<String, Integer> entry : name.entrySet()) {
+			Label lname = new Label("Name:" + entry.getKey());
+			Label ltrial = new Label("#Trials:" + Integer.toString(trial.get(entry.getKey()).size()));
+			Label lsites = new Label("#Sites:" + Integer.toString(entry.getValue()) );
+			Label linter = new Label("#Interventions:" + Integer.toString(intervention.get(entry.getKey()).size()));
+			detailsGroup.addComponent(lname);
+			detailsGroup.addComponent(ltrial);
+			detailsGroup.addComponent(lsites);
+			detailsGroup.addComponent(linter);
+		}
 
         //detailsGroup.addComponent(buildTicketLayout(ticket));
         /*
@@ -312,15 +371,26 @@ public class MapView extends CssLayout implements LeafletClickListener{
 		zoom_level = 1;
 		map.setZoomLevel(zoom_level);
 		map.setCenter(new Point(43.041809,-87.906837));
-		int count = 0;
+		int count = 0, site_count = 0;
+
+		String label_text = "";
 
 		for (Map.Entry<String, HashMap<String, String> > entry : des.entrySet()) {
+			site_count = 0;
+
+			HashSet<String> trial_count = new HashSet<String>();
+			HashSet<String> inter_count = new HashSet<String>();
 			HashSet<String> visited = new HashSet<String>();
 
 			LCircleMarker cMarker = null;
 			String color = "#" + entry.getValue().get("color");
-			count += dataset.get(entry.getKey()).size();
+			site_count = dataset.get(entry.getKey()).size();
+			count += site_count;
 			for (ArrayList<String> tmp : dataset.get(entry.getKey())) {
+				trial_count.add(tmp.get(3));
+				for (int i = 4; i<tmp.size(); i++) {
+					inter_count.add(tmp.get(i));
+				}
 				String key = tmp.get(0) + tmp.get(1);
 				if (visited.contains(key)) {
 					if (!point2data.containsKey(key))
@@ -341,9 +411,12 @@ public class MapView extends CssLayout implements LeafletClickListener{
 				cMarker.addClickListener(this);
 				map.addComponent(cMarker);
 			}
+			label_text = label_text + "Name:" + entry.getKey() + "\n" +
+					"#Trials:" + Integer.toString(trial_count.size()) + "\n" +
+					"#Sites:" + Integer.toString(site_count) + "\n" +
+					"#Intervention:" + Integer.toString(inter_count.size()) + "\n";
 		}
-		label.setValue("#Sites:" + Integer.toString(count));
-
+		label.setValue(label_text);
 		return true;
 	}
     
