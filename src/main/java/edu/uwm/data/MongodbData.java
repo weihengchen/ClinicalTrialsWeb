@@ -170,9 +170,9 @@ public class MongodbData implements Serializable {
                         int i;
                         for (i=0; i<jr.length(); i++) {
                             JSONObject fac = jr.optJSONObject(i).optJSONObject("facility");
-                            if ( fac != null && (!country.isEmpty())) {
+                            if ( fac != null && fac.optJSONObject("address")!=null && (!country.isEmpty())) {
                                 String c = fac.optJSONObject("address").optString("country");
-                                if (country.compareTo(c) != 0)
+                                if (c.toLowerCase().indexOf(country.toLowerCase()) == -1)
                                     continue;
                             }
                             sites++;
@@ -192,19 +192,21 @@ public class MongodbData implements Serializable {
                         JSONObject js = study.optJSONObject("location");
                         if (js != null) {
                             JSONObject fac = js.optJSONObject("facility");
-                            String c = fac.optJSONObject("address").optString("country");
-                            if (country.isEmpty() || (country.compareTo(c)==0)) {
-                                sites++;
-                                if (fac != null) {
-                                    ArrayList<String> tmp = new ArrayList<String>();
-                                    tmp.add(Double.toString(fac.optDouble("latitude")));
-                                    tmp.add(Double.toString(fac.optDouble("longitude")));
-                                    tmp.add(des.get("name"));
-                                    tmp.add(nct);
-                                    for (int j=0; j<intervention.size(); j++) {
-                                        tmp.add(intervention.get(j));
+                            if (fac != null && fac.optJSONObject("address") != null) {
+                                String c = fac.optJSONObject("address").optString("country");
+                                if (country.isEmpty() || c.toLowerCase().indexOf(country.toLowerCase()) != -1) {
+                                    sites++;
+                                    if (fac != null) {
+                                        ArrayList<String> tmp = new ArrayList<String>();
+                                        tmp.add(Double.toString(fac.optDouble("latitude")));
+                                        tmp.add(Double.toString(fac.optDouble("longitude")));
+                                        tmp.add(des.get("name"));
+                                        tmp.add(nct);
+                                        for (int j = 0; j < intervention.size(); j++) {
+                                            tmp.add(intervention.get(j));
+                                        }
+                                        points.add(tmp);
                                     }
-                                    points.add(tmp);
                                 }
                             }
                         }
@@ -307,11 +309,11 @@ public class MongodbData implements Serializable {
         }
 
         if (!key.get("condition").isEmpty()) {
-            query = new Document("$and", asList(query, new Document("clinical_study.condition", key.get("condition"))));
+            query = new Document("$and", asList(query, new Document("clinical_study.condition", new Document("$regex", key.get("condition")))));
         }
 
         if (!key.get("country").isEmpty()) {
-            query = new Document("$and", asList(query, new Document("clinical_study.location_countries.country", key.get("country"))));
+            query = new Document("$and", asList(query, new Document("clinical_study.location_countries.country", new Document("$regex", key.get("country")))));
         }
 
         if (!key.get("intervention").isEmpty()) {

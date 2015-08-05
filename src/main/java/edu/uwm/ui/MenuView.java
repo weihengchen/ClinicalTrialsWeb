@@ -39,6 +39,7 @@ public class MenuView extends NavigationView {
 
         Button btn = new Button();
         btn.setIcon(FontAwesome.PLUS);
+        btn.setCaption("New Query");
         this.setRightComponent(btn);
 
         final Component co = this;

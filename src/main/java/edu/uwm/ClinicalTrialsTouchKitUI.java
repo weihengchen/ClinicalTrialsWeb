@@ -64,7 +64,7 @@ public class ClinicalTrialsTouchKitUI extends UI {
         offlineMode.setPersistentSessionCookie(true);
         // Define the timeout in secs to wait when a server request is sent
         // before falling back to offline mode.
-        offlineMode.setOfflineModeTimeout(15);
+        offlineMode.setOfflineModeTimeout(60);
     }
     private void buildView() {
     	//hd = HadoopData.getInstance();
