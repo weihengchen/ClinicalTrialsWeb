@@ -174,9 +174,9 @@ public class MapView extends CssLayout implements LeafletClickListener{
 		//label = new Label();
 		label = new TextArea();
 		Page.Styles style = Page.getCurrent().getStyles();
-		style.add(".flow-z {position:absolute; right:0px; z-index:1; text-align:right; background-color:transparent; border-style:none;}");
+		style.add(".flow-z {position:absolute; right:0px; z-index:1; text-align:right; background-color:transparent; border-style:none; resize:none; width:150px; height:200px;}");
 		label.setPrimaryStyleName("flow-z");
-		label.setWidth("80%");
+		label.setEnabled(false);
 		addComponent(label);
 		addComponent(map);
     }
