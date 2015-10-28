@@ -21,7 +21,9 @@ import com.vaadin.ui.Button.ClickEvent;
 
 import edu.uwm.data.*;
 import edu.uwm.ClinicalTrialsTouchKitUI;
-
+/*
+Collection of different queries, multi selection and display on map.
+ */
 @SuppressWarnings("serial")
 public class MenuView extends NavigationView {
     private final VerticalComponentGroup content = new VerticalComponentGroup();
@@ -33,10 +35,15 @@ public class MenuView extends NavigationView {
     public MenuView() {
         buildView();
     }
+    /*
+    Build Menu View
+     */
     public void buildView() {
+        //Initialize
     	setCaption("Query");
 		MongodbData md = MongodbData.getInstance();
 
+        //Add right top corner button "new query" and clicklistener
         Button btn = new Button();
         btn.setIcon(FontAwesome.PLUS);
         btn.setCaption("New Query");
@@ -44,6 +51,7 @@ public class MenuView extends NavigationView {
 
         final Component co = this;
         btn.addClickListener(new Button.ClickListener() {
+            //click to create a new query by using query form
             @Override
             public void buttonClick(ClickEvent clickEvent) {
                 QueryForm form = new QueryForm();
@@ -54,16 +62,20 @@ public class MenuView extends NavigationView {
             }
         });
 
+        //Add CSS style
         Page.Styles style = Page.getCurrent().getStyles();
         style.add(".float-left{float:left;vertical-align:middle; text-align:left; left:3px; z-index:1; position:absolute;}");
         style.add(".float-right{float:right;vertical-align:middle;}");
         //hl.addStyleName("horizontal v-horizontallayout v-layout v-horizontal v-widget horizontal v-horizontallayout-horizontal v-has-width v-has-height");
 
+        //Get existed query results
         descriptions = md.getQueryDes();
         datasets = md.getQueryDatasets();
         mark = new HashMap<String, Boolean>();
 
+        //add the query results to UI one by one.
         for (Map.Entry<String, HashMap<String, String>> i : descriptions.entrySet()) {
+            //set the description of the query
             HashMap<String, String> query = i.getValue();
             NavigationButton tmp_btn = new NavigationButton(query.get("name"));
             this.addCss(query.get("color"));
@@ -71,6 +83,7 @@ public class MenuView extends NavigationView {
             tmp_btn.setWidth("95%");
             tmp_btn.addStyleName("float-right");
 
+            //add clicklistener to redirect to query detail page
             tmp_btn.setData(query);
             tmp_btn.addClickListener(new NavigationButtonClickListener() {
                 @Override
@@ -84,6 +97,7 @@ public class MenuView extends NavigationView {
                 }
             });
 
+            //Add multi selection function
             Button t_btn = new Button();
             t_btn.setWidth("10%");
             t_btn.setStyleName("float-left");
@@ -105,13 +119,16 @@ public class MenuView extends NavigationView {
             });
             mark.put(i.getKey(), false);
 
+            //add to query result component collection
             cells.put(query.get("name"), new CssLayout(t_btn, tmp_btn));
         }
 
+        //Add query result cell to UI
         for (Map.Entry<String, CssLayout> i : cells.entrySet()) {
             content.addComponent(i.getValue());
         }
 
+        //Add a button to redirect to MapView
         load = new Button("Show in Map", new Button.ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
@@ -128,12 +145,18 @@ public class MenuView extends NavigationView {
                 app.queryData(des, dataset);
             }
         });
+        //set UI
         setContent(new CssLayout(content, load));
     }
+    /*
+    add query result to Menuview
+     */
     public void addQuery(HashMap<String, String> query) {
+        //Initialize
         MongodbData md = MongodbData.getInstance();
         md.getQueryData(query);
 
+        //add item in view, set the color, css style, click listenser
         NavigationButton btn = new NavigationButton(query.get("name"));
         this.addCss(query.get("color"));
         btn.addStyleName("color-" + query.get("color"));
@@ -152,6 +175,7 @@ public class MenuView extends NavigationView {
             }
         });
 
+        //add multi selection option
         Button t_btn = new Button();
         t_btn.setWidth("10%");
         t_btn.setStyleName("float-left");
@@ -173,14 +197,20 @@ public class MenuView extends NavigationView {
         });
         mark.put(query.get("name"), false);
 
+        //add to component group
         cells.put(query.get("name"), new CssLayout(t_btn, btn));
         content.removeAllComponents();
         for (Map.Entry<String, CssLayout> i : cells.entrySet()) {
             content.addComponent(i.getValue());
         }
 
+        //set content
         setContent(new CssLayout(content, load));
     }
+
+    /*
+    remove the query result
+     */
     public void removeQuery(String str) {
         cells.remove(str);
         descriptions.remove(str);
@@ -193,6 +223,9 @@ public class MenuView extends NavigationView {
         setContent(new CssLayout(content, load));
     }
 
+    /*
+    Add CSS style to current page.
+     */
     private boolean addCss(String str) {
         Page.Styles style = Page.getCurrent().getStyles();
         style.add(".color-" + str + "{color:#" + str + ";}");

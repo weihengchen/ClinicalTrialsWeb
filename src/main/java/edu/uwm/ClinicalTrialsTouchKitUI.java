@@ -28,6 +28,7 @@ import com.vaadin.ui.UI;
 
 /**
  * The UI's "main" class
+ *
  */
 @SuppressWarnings("serial")
 @Widgetset("edu.uwm.gwt.ClinicalTrialsWidgetSet")
@@ -66,6 +67,10 @@ public class ClinicalTrialsTouchKitUI extends UI {
         // before falling back to offline mode.
         offlineMode.setOfflineModeTimeout(60);
     }
+    /*
+    1. Initialize the MongoDB singleton Instance
+    2. Create the TabBarView, and add three views(query, condition, map).
+     */
     private void buildView() {
     	//hd = HadoopData.getInstance();
     	md = MongodbData.getInstance();
@@ -92,21 +97,39 @@ public class ClinicalTrialsTouchKitUI extends UI {
         tab.setCaption("Map");
         setContent(tabBarView);
     }
-    
+
+    /*
+    Get the instance of Current UI object to manage different views.
+     */
     public static ClinicalTrialsTouchKitUI getApp() {
     	return (ClinicalTrialsTouchKitUI) UI.getCurrent();
     }
 
+    /*
+    Change view to map view to display the clustering result.
+    data_set:String, the name of condition
+     */
     public void showDataSet(String data_set) {
     	mapview.updateClusterMap(data_set);
     	tabBarView.setSelectedTab(mapview);
     	return;
     }
+
+    /*
+    Change view to map view to display the original recruitment sites position
+    data_set:String, the name of condition
+     */
     public void showOriginalDataSet(String data_set) {
     	mapview.updateOriginalMap(data_set);
     	tabBarView.setSelectedTab(mapview);
     	return;
     }
+
+    /*
+    Change view to map view to display the original recruitment sites position
+    des:HashMap<String, HashMap<String, String> >, conditions -> {description_title:description}
+    dataset:HashMap<String, ArrayList<ArrayList<String> > >, condition -> [ [pos_x, pos_y, count,...], ...]
+     */
     public void queryData(HashMap<String, HashMap<String, String> >des, HashMap<String, ArrayList<ArrayList<String> > > dataset) {
     	//hd.reloadData();
     	//buildView();

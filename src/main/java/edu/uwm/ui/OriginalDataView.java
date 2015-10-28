@@ -21,6 +21,10 @@ import edu.uwm.data.HadoopData;
 import edu.uwm.data.MongodbData;
 import edu.uwm.data.ShellExec;
 
+/*
+The information about Original Condition dataset
+ */
+
 @SuppressWarnings("serial")
 public class OriginalDataView extends NavigationView {
 
@@ -29,16 +33,20 @@ public class OriginalDataView extends NavigationView {
     }
     public void buildView() {
     	if (this.getData() == null) return;
+        /*
+        initialize data
+         */
     	setCaption((String)this.getData());
     	//HadoopData hd = HadoopData.getInstance();
 		//HashMap<String, String> des = hd.getOriginalDes((String)this.getData());
 		MongodbData md = MongodbData.getInstance();
+        //query data
 		HashMap<String, String> des = md.getOriginalDes((String)this.getData());
     	
         final VerticalComponentGroup content = new VerticalComponentGroup();
-
-        
+        //add component
         if (des != null) {
+            //information components
         	TextField field = new TextField("Name");
         	field.setEnabled(false);
         	field.setValue(des.get("name"));
@@ -81,6 +89,7 @@ public class OriginalDataView extends NavigationView {
         	content.addComponent(field);
         	*/
 
+            //show in map button
         	final Button showButton = new Button("Show in Map");
         	showButton.setData(this.getData());
         	showButton.addClickListener(new ClickListener() {
@@ -94,6 +103,7 @@ public class OriginalDataView extends NavigationView {
         	
         	setContent(new CssLayout(content, showButton));
         } else {
+            //if can't find data set.
         	String str = "can not find the data" + (String)this.getData();
         	System.err.println(str);
             TextField field = new TextField();

@@ -11,10 +11,12 @@ public class ShellExec {
 	private String cluster_shell;
 	private String original_shell;
 	private ArrayList<String> paras;
+	//initialize
 	public ShellExec() {
 		String basepath = VaadinService.getCurrent().getBaseDirectory().getAbsolutePath();
 		//Change the shell script permission to 777
 		System.out.println(basepath);
+        //the path of cluster and original
 		cluster_shell = basepath + "/config/script/spark_cluster.sh";
 		original_shell = basepath + "/config/script/spark_original.sh";
 	}
@@ -31,7 +33,8 @@ public class ShellExec {
 	public Boolean execOriginal() {
 		return execCommand(original_shell);
 	}
-	
+
+    //execute command
 	private  Boolean execCommand(String shell) {
 		try {
 			ArrayList<String> execShell = new ArrayList<String>();

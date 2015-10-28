@@ -33,10 +33,13 @@ import static com.mongodb.client.model.Sorts.*;
 
 /**
  * Created by along on 7/14/15.
+ * singleton implement of MongoDB data
  */
 public class MongodbData implements Serializable {
+    //instance
     private static MongodbData instance = null;
 
+    //MongoDB variables
     private MongoClient mongoClient = null;
     private MongoDatabase db = null;
 
@@ -53,6 +56,7 @@ public class MongodbData implements Serializable {
         return instance;
     }
     private Boolean init() {
+        //Initialize parameters in MongoDB
         //TODO: set up authentication in MongoDB, put parameters in config file
         System.out.println("MongoDB initialize start!");
         mongoClient = new MongoClient( "localhost" , 27017 );
@@ -64,13 +68,18 @@ public class MongodbData implements Serializable {
         return true;
     }
 
+    //condition list
     private ArrayList<String> conditions = null;
+    //get Conditions List
     public ArrayList<String> getConditionsList() {
         conditions = new ArrayList<String>();
+        //Initialize collection
         MongoCollection<Document> mc = db.getCollection("trials");
+        //Initialize query
         MongoCursor<Document> cursor = mc.find(exists("clinical_study.condition")).projection(fields(include("clinical_study.condition"), excludeId())).iterator();
         TreeMap<String, Integer> cond2count = new TreeMap<String, Integer>();
 
+        //read data
         try {
             while(cursor.hasNext()) {
                 Document doc = cursor.next();
@@ -99,12 +108,14 @@ public class MongodbData implements Serializable {
             cursor.close();
         }
 
+        //add to list
         for (Map.Entry<String, Integer> entry : entriesSortedByValues(cond2count)) {
             conditions.add(entry.getKey());
         }
         return conditions;
     }
 
+    //sort Hashmap
     static <K,V extends Comparable<? super V>>
     SortedSet<Map.Entry<K,V>> entriesSortedByValues(Map<K,V> map) {
         SortedSet<Map.Entry<K,V>> sortedEntries = new TreeSet<Map.Entry<K,V>>(
@@ -118,8 +129,10 @@ public class MongodbData implements Serializable {
         return sortedEntries;
     }
 
+    //get Description, Geoloation of a query
     private boolean getGeoLocations(Document query, HashMap<String, String> des, ArrayList< ArrayList<String>> dataset, String country) {
         MongoCollection<Document> mc = db.getCollection("trials");
+        //construct query
         MongoCursor<Document> cursor = mc.find(query)
                 .projection(fields(include("clinical_study.location", "clinical_study.clinical_results.baseline.measure_list"
                         , "clinical_study.intervention.intervention_name", "clinical_study.sponsors.collaborator", "clinical_study.sponsors.lead_sponsor", "clinical_study.id_info.nct_id"), excludeId()))
@@ -129,6 +142,7 @@ public class MongodbData implements Serializable {
         //description
         Integer trial = 0, sites = 0, result = 0, result_pop = 0;
         ArrayList<ArrayList <String> > points = dataset;
+        //read data
         try {
             while(cursor.hasNext()) {
                 Document doc = cursor.next();
@@ -136,6 +150,7 @@ public class MongodbData implements Serializable {
                 try {
                     ArrayList<String> intervention = new ArrayList<String>();
                     JSONObject json = new JSONObject(doc.toJson());
+                    //read basic information: nct_id, intervention, sponsors
                     JSONObject study = json.optJSONObject("clinical_study");
                     String nct = study.optJSONObject("id_info").optString("nct_id");
                     if (study.optJSONArray("intervention") != null) {
@@ -165,7 +180,9 @@ public class MongodbData implements Serializable {
                             }
                         }
                     }
+                    //read locations
                     if (study.optJSONArray("location") != null) {
+                        //single location
                         JSONArray jr = study.optJSONArray("location");
                         int i;
                         for (i=0; i<jr.length(); i++) {
@@ -189,6 +206,7 @@ public class MongodbData implements Serializable {
                             }
                         }
                     } else {
+                        //multi locations
                         JSONObject js = study.optJSONObject("location");
                         if (js != null) {
                             JSONObject fac = js.optJSONObject("facility");
@@ -211,6 +229,7 @@ public class MongodbData implements Serializable {
                             }
                         }
                     }
+                    //results
                     if (study.optJSONObject("clinical_results") != null) result++;
                     JSONObject tmp;
                     JSONArray res;
@@ -248,6 +267,7 @@ public class MongodbData implements Serializable {
                 }
             }
 
+            //put to collection
             des.put("trial", trial.toString());
             des.put("site", sites.toString());
             des.put("result", result.toString());
@@ -259,6 +279,7 @@ public class MongodbData implements Serializable {
         return true;
     }
 
+    //origianl dataset name to description
     private HashMap<String, HashMap<String,String> > original_name2des = null;
     public HashMap<String, String> getOriginalDes(String key) {
         if (!original_name2des.containsKey(key)) {
@@ -269,11 +290,14 @@ public class MongodbData implements Serializable {
         }
         return original_name2des.get(key);
     }
+    //read original dataset
     private Boolean readOriginalData(String key) {
+        //construct query
         Document query = new Document("clinical_study.condition", key);
         HashMap<String, String> dat = new HashMap<String, String>();
         ArrayList<ArrayList <String> > points = new ArrayList<ArrayList<String>>();
         dat.put("name", key);
+        //get information
         getGeoLocations(query, dat, points, "");
         original_name2des.put(key, dat);
         original_name2dataset.put(key, points);
@@ -281,6 +305,7 @@ public class MongodbData implements Serializable {
         return true;
     }
 
+    //map from name to dataset content
     private HashMap<String, ArrayList< ArrayList<String> > > original_name2dataset;
     public ArrayList< ArrayList<String> > getOriginalDataSet(String key) {
         if (!original_name2dataset.containsKey(key)) {
@@ -292,16 +317,23 @@ public class MongodbData implements Serializable {
         return original_name2dataset.get(key);
     }
 
+    //query results
+    //map from name to description
     private HashMap<String, HashMap<String, String> > descriptions = new HashMap<String, HashMap<String, String>>();
+    //map from name to dataset
     private HashMap<String, ArrayList<ArrayList<String> > > datasets = new HashMap<String, ArrayList<ArrayList<String>>>();
+    //get description
     public HashMap<String, HashMap<String, String> > getQueryDes() {
         return descriptions;
     }
+    //get datasets
     public HashMap<String, ArrayList<ArrayList<String> > > getQueryDatasets() {
         return datasets;
     }
 
+    //new query
     public boolean getQueryData(HashMap<String, String> key) {
+        //construct new query
         Document query = new Document();
         if (!key.get("id").isEmpty()) {
             System.out.println(key.get("id"));
@@ -329,6 +361,7 @@ public class MongodbData implements Serializable {
         return true;
     }
 
+    //check same query name
     public boolean sameQueryName(String key) {
         if (descriptions.containsKey(key)) {
             return true;

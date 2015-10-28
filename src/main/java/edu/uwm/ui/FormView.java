@@ -16,6 +16,9 @@ import com.vaadin.ui.TextField;
 import edu.uwm.ClinicalTrialsTouchKitUI;
 import edu.uwm.data.HadoopData;
 
+/*
+FormView to display the details of clustering result
+ */
 @SuppressWarnings("serial")
 public class FormView extends NavigationView {
 
@@ -24,12 +27,18 @@ public class FormView extends NavigationView {
     }
     public void buildView() {
     	if (this.getData() == null) return;
+        /*
+        Get result from HadoopData by cluster name
+         */
     	setCaption((String)this.getData());
     	HadoopData hd = HadoopData.getInstance();
     	HashMap<String, String> des = hd.getClusterDes((String)this.getData());
     	
         final VerticalComponentGroup content = new VerticalComponentGroup();
 
+        /*
+        Add details component to UI
+         */
         TextField field = new TextField("Name");
         field.setEnabled(false);
         field.setInputPrompt(des.get("name"));
@@ -55,6 +64,7 @@ public class FormView extends NavigationView {
         field.setInputPrompt(des.get("cost"));
         content.addComponent(field);
 
+        //Add Map show button, and ClickListener
         final Button submitButton = new Button("Show in Map");
         submitButton.setData(this.getData());
         submitButton.addClickListener(new ClickListener() {

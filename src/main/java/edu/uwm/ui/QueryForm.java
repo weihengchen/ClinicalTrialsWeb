@@ -14,13 +14,16 @@ import java.util.HashMap;
 import java.util.Random;
 
 /**
- * Created by along on 7/22/15.
+ * Query Form for dataset query
  */
 public class QueryForm extends NavigationView {
     public QueryForm() {
         buildView();
     }
     private static Integer no = 1;
+    /*
+    randomly generate color
+     */
     private String genColor() {
         Random rand = new Random();
         Integer red = rand.nextInt(256);
@@ -44,6 +47,7 @@ public class QueryForm extends NavigationView {
         //HadoopData hd = HadoopData.getInstance();
         //HashMap<String, String> des = hd.getClusterDes((String)this.getData());
 
+        //add components
         final VerticalComponentGroup content = new VerticalComponentGroup();
 
         final TextField name = new TextField("Query Name:");
@@ -80,12 +84,15 @@ public class QueryForm extends NavigationView {
 
         final Object par = this.getData();
         if (par instanceof MenuView) {
+            //add new query form
+            //set new color
             String str = genColor();
             color.setValue(str);
             this.addCss(str);
             color.addStyleName("color-" + str);
 
             no++;
+            //add query button, and clicklistener
             final Button submitButton = new Button("Query");
             submitButton.setIcon(FontAwesome.SEARCH_PLUS);
             submitButton.addClickListener(new Button.ClickListener() {
@@ -111,6 +118,7 @@ public class QueryForm extends NavigationView {
 
             setContent(new CssLayout(content, submitButton));
         } else if (par instanceof HashMap) {
+            //display query conditions, set value for each component
             final HashMap<String, String> data = (HashMap<String, String>) par;
             name.setValue(data.get("name"));
             name.setEnabled(false);
@@ -152,6 +160,7 @@ public class QueryForm extends NavigationView {
             field.setValue(data.get("sponsors"));
             content.addComponent(field);
 
+            //add remove button
             final Button submitButton = new Button("Remove");
             submitButton.addClickListener(new Button.ClickListener() {
                 @Override

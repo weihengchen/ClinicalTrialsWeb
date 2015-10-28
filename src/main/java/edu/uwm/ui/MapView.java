@@ -28,14 +28,18 @@ import com.vaadin.ui.Notification.Type;
 import com.vividsolutions.jts.geom.LineString;
 
 import edu.uwm.data.HadoopData;
-
+/*
+Use to display the result on map
+ */
 public class MapView extends CssLayout implements LeafletClickListener{
 
     private LMap map = null;
 	//private Label label = null;
 	private TextArea label = null;
+    //used to get all the data information in the point when it is clicked.
 	private HashMap<String, ArrayList<ArrayList <String> > > point2data = new HashMap<String, ArrayList<ArrayList<String>>>();
     private int zoom_level;
+    //color_panel is used to specify the density from blue to red.
     private ArrayList<String> color_panel = new ArrayList<String>(Arrays.asList("#801FEF","#7C1DEF","#771CF0","#721AF2",
     		"#6B1AF2","#6718F2","#6016F4","#5B15F4","#5613F4","#5011F6",
     		"#4911F6","#420FF6","#3D0EF7","#360CF9","#2F0AF9","#2A08F9",
@@ -88,13 +92,17 @@ public class MapView extends CssLayout implements LeafletClickListener{
         super.attach();
     };
 
+    /*
+    Build the Map view
+     */
     private void buildView() {
+        /*
+        Initialize the Map
+         */
         setCaption("Map");
         addStyleName("mapview");
         setSizeFull();
-
         map = new LMap();
-
         // Note, if you wish to use Mapbox base maps, get your own API key.
         LTileLayer mapBoxTiles = new LTileLayer(
         		//"https://a.tiles.mapbox.com/v4/weiheng.kp1naddf/page.html?access_token=pk.eyJ1Ijoid2VpaGVuZyIsImEiOiJxRXhVT2pVIn0.NLDHWGkfoNQRysu3wKBoiA#4/43.04/-87.91");
@@ -102,17 +110,21 @@ public class MapView extends CssLayout implements LeafletClickListener{
         		//"http://{s}.tiles.mapbox.com/v3/vaadin.i1pikm9o/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoid2VpaGVuZyIsImEiOiJxRXhVT2pVIn0.NLDHWGkfoNQRysu3wKBoiA");
 		mapBoxTiles.setDetectRetina(true);
 		map.addLayer(mapBoxTiles);
-
 		map.setAttributionPrefix("Powered by <a href=\"leafletjs.com\">Leaflet</a> — &copy; <a href='http://osm.org/copyright'>OpenStreetMap</a> contributors");
 		map.setImmediate(true);
-
         map.setSizeFull();
+        //set zoom level
         zoom_level = 1;
 		map.setZoomLevel(zoom_level);
+        //set center point
 		map.setCenter(new Point(43.041809, -87.906837));
 		map.addMoveEndListener(new LeafletMoveEndListener() {
+            /*
+            When the map is moved, it need to update the statistical information and Point Mark.
+             */
 			@Override
 			public void onMoveEnd(LeafletMoveEndEvent event) {
+                //Get boundary of map window
 				double nelat = map.getBounds().getNorthEastLat();
 				double nelon = map.getBounds().getNorthEastLon();
 				double swlat = map.getBounds().getSouthWestLat();
@@ -122,6 +134,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
 				//System.out.println(swlat);
 				//System.out.println(swlon);
 
+                //in different zoom level, set different radius for Point mark.
 				int level = map.getZoomLevel();
 				int r = 1;
 				if (level <= 3) r = 1;
@@ -130,6 +143,9 @@ public class MapView extends CssLayout implements LeafletClickListener{
 
 				ArrayList<ArrayList <String> > tmp_data = new ArrayList<ArrayList<String>>();
 
+                /*
+                Update the point mark, and also add the points to tmp_data while the points are inside the map windows
+                 */
 				Iterator<Component> iterator = map.iterator();
 				while (iterator.hasNext()) {
 					Component next = iterator.next();
@@ -142,6 +158,9 @@ public class MapView extends CssLayout implements LeafletClickListener{
 						tmp.setRadius(r);
 					}
 				}
+                /*
+                Update the statistical information about the points inside the map window
+                 */
 				HashMap<String, Integer> name = new HashMap<String, Integer>();
 				HashMap<String, HashSet<String> > trial = new HashMap<String, HashSet<String>>();
 				HashMap<String, HashSet<String> > intervention = new HashMap<String, HashSet<String>>();
@@ -171,7 +190,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
 			}
 		});
 
-		//label = new Label();
+        //add the statistical information to right top corner
 		label = new TextArea();
 		Page.Styles style = Page.getCurrent().getStyles();
 		style.add(".flow-z {position:absolute; right:0px; z-index:1; text-align:right; background-color:transparent; border-style:none; resize:none; width:150px; height:200px;}");
@@ -180,11 +199,17 @@ public class MapView extends CssLayout implements LeafletClickListener{
 		addComponent(label);
 		addComponent(map);
     }
-    
+
+    /*
+    Display the Clustering result in Map view.
+     */
     public Boolean updateClusterMap(String dataset_key) {
     	if (map == null) {
     		buildView();
     	}
+        /*
+        Remove all the old point mark.
+         */
     	Iterator<Component> iterator = map.iterator();
         Collection<Component> remove = new ArrayList<Component>();
         while (iterator.hasNext()) {
@@ -196,21 +221,23 @@ public class MapView extends CssLayout implements LeafletClickListener{
         for (Component component : remove) {
             map.removeComponent(component);
         }
-        
+
+        //set zoom level and center point
         zoom_level = 3;
         map.setZoomLevel(zoom_level);
         map.setCenter(new Point(43.041809, -87.906837));
-        
+
+        //get clustering result
         HadoopData hd = HadoopData.getInstance();
         ArrayList< ArrayList<String> > dataset = hd.getClusterDataSet(dataset_key);
-        
         
         LCircleMarker cMarker = null;
         String color = null;
         HashMap<String, ArrayList< ArrayList<String> > > str2multi = new HashMap<String, ArrayList< ArrayList<String> > >();
         HashMap<String, Point > center_pos = new HashMap<String, Point>();
         TreeMap<String, Integer> group2num = new TreeMap<String, Integer>();
-        
+
+        //get the center points and points in different clusters by group id.
         for (ArrayList<String> tmp : dataset) {
         	if(tmp.get(0).equals("center")) {
         		Point p = new Point(Double.parseDouble(tmp.get(3)), Double.parseDouble(tmp.get(2)));
@@ -224,6 +251,8 @@ public class MapView extends CssLayout implements LeafletClickListener{
         		}
         	}
         }
+
+        //choose color by the clustering density from color_panel
         HashMap<String, String> id2color = new HashMap<String, String>();
         int i = 0;
         for (Map.Entry<String,Integer> entry : group2num.entrySet()) {
@@ -232,24 +261,28 @@ public class MapView extends CssLayout implements LeafletClickListener{
         	id2color.put(key, tmp);
         	i+=1;
         }
-        
+
+        //add point mark and line to the map view
         for (ArrayList<String> tmp : dataset) {
         	String mark_key = tmp.get(0) + tmp.get(1) + tmp.get(2) + tmp.get(3);
+            //don't need to add mark if the point is already there.
         	if (str2multi.containsKey(mark_key)) {
         		ArrayList< ArrayList<String>> tmp_al = str2multi.get(mark_key);
         		tmp_al.add(tmp);
         		continue;
         	}
         	ArrayList< ArrayList<String> > tmp_al = new ArrayList< ArrayList<String> >();
-        	
         	tmp_al.add(tmp);
         	str2multi.put(mark_key, tmp_al);
+
+            //set color value
         	if (id2color.containsKey(tmp.get(1))) {
         		color = id2color.get(tmp.get(1));
         	} else {
         		color = "#000000";
         	}
 
+            //add origin point and center point separately.
         	if (tmp.get(0).equals("origin")) {
         		if (center_pos.containsKey(tmp.get(1))) {
         			LPolyline line = new LPolyline();
@@ -289,19 +322,24 @@ public class MapView extends CssLayout implements LeafletClickListener{
 	}
 	*/
 
+    /*
+    Popup detail information about the clicked point.
+     */
     private void popUp(String key) {
+        //initialize popover windows
     	Popover pover = new Popover();
     	pover.addStyleName("Detail");
-
         VerticalComponentGroup detailsGroup = new VerticalComponentGroup();
         Label title = new Label("Detail");
         detailsGroup.addComponent(title);
 
+        //get the data points associated with the cilcked point.
 		ArrayList<ArrayList <String> > tmp_data = point2data.get(key);
 		HashMap<String, Integer> name = new HashMap<String, Integer>();
 		HashMap<String, HashSet<String> > trial = new HashMap<String, HashSet<String>>();
 		HashMap<String, HashSet<String> > intervention = new HashMap<String, HashSet<String>>();
 		int i, j;
+        //calculate the statistical information about the points.
 		for (i=0; i<tmp_data.size(); i++) {
 			String t_name = tmp_data.get(i).get(2);
 			if (!name.containsKey(t_name) ) {
@@ -316,6 +354,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
 			}
 		}
 
+        //add the information to popover window
 		for (Map.Entry<String, Integer> entry : name.entrySet()) {
 			Label lname = new Label("Name:" + entry.getKey());
 			Label ltrial = new Label("#Trials:" + Integer.toString(trial.get(entry.getKey()).size()));
@@ -326,37 +365,23 @@ public class MapView extends CssLayout implements LeafletClickListener{
 			detailsGroup.addComponent(lsites);
 			detailsGroup.addComponent(linter);
 		}
-
-        //detailsGroup.addComponent(buildTicketLayout(ticket));
-        /*
-        Label closeLabel = new Label("Close");
-        closeLabel.addStyleName("blue");
-        closeLabel.addStyleName("textcentered");
-        closeLabel.addStyleName("closelabel");
-
-        closeLabel.setHeight(30.0f, Unit.PIXELS);
-
-        CssLayout wrapper = new CssLayout(closeLabel);
-        wrapper.addLayoutClickListener(new LayoutClickListener() {
-            @Override
-            public void layoutClick(final LayoutClickEvent event) {
-                close();
-            }
-        });
-        detailsGroup.addComponent(wrapper);
-        */
+        //Display popup
         detailsGroup.setWidth(300, Unit.PIXELS);
         pover.setContent(detailsGroup);
         pover.setClosable(true);
         pover.showRelativeTo(this);
     }
 
+    /*
+    Display selected query results on map.
+     */
 	public Boolean updateQueryMap(HashMap<String, HashMap<String, String> >des, HashMap<String, ArrayList<ArrayList<String> > > dataset) {
 		point2data.clear();
 		if (map == null) {
 			buildView();
 		}
-		Iterator<Component> iterator = map.iterator();
+		//Initialize variables, and remove all the other marks firstly.
+        Iterator<Component> iterator = map.iterator();
 		Collection<Component> remove = new ArrayList<Component>();
 		while (iterator.hasNext()) {
 			Component next = iterator.next();
@@ -368,6 +393,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
 			map.removeComponent(component);
 		}
 
+        //set zoom_level and center point.
 		zoom_level = 1;
 		map.setZoomLevel(zoom_level);
 		map.setCenter(new Point(43.041809,-87.906837));
@@ -375,22 +401,29 @@ public class MapView extends CssLayout implements LeafletClickListener{
 
 		String label_text = "";
 
+        //add point mark from the dataset to UI.
 		for (Map.Entry<String, HashMap<String, String> > entry : des.entrySet()) {
+            //For each dataset.
 			site_count = 0;
 
 			HashSet<String> trial_count = new HashSet<String>();
 			HashSet<String> inter_count = new HashSet<String>();
 			HashSet<String> visited = new HashSet<String>();
 
+            //select color
 			LCircleMarker cMarker = null;
 			String color = "#" + entry.getValue().get("color");
 			site_count = dataset.get(entry.getKey()).size();
 			count += site_count;
+
+            //add points in the dataset.
 			for (ArrayList<String> tmp : dataset.get(entry.getKey())) {
 				trial_count.add(tmp.get(3));
 				for (int i = 4; i<tmp.size(); i++) {
 					inter_count.add(tmp.get(i));
 				}
+
+                //Associate point information with point key.
 				String key = tmp.get(0) + tmp.get(1);
 				if (visited.contains(key)) {
 					if (!point2data.containsKey(key))
@@ -399,6 +432,8 @@ public class MapView extends CssLayout implements LeafletClickListener{
 					continue;
 				}
 				visited.add(key);
+
+                //add point mark to UI
 				cMarker = new LCircleMarker(Double.parseDouble(tmp.get(0)), Double.parseDouble(tmp.get(1)), 1);
 				cMarker.setData(key);
 				if (!point2data.containsKey(key))
@@ -411,21 +446,26 @@ public class MapView extends CssLayout implements LeafletClickListener{
 				cMarker.addClickListener(this);
 				map.addComponent(cMarker);
 			}
+            //Add statistical information
 			label_text = label_text + "Name:" + entry.getKey() + "\n" +
 					"#Trials:" + Integer.toString(trial_count.size()) + "\n" +
 					"#Sites:" + Integer.toString(site_count) + "\n" +
 					"#Intervention:" + Integer.toString(inter_count.size()) + "\n";
 		}
+        //set to UI
 		label.setValue(label_text);
 		return true;
 	}
     
-
+    /*
+    Display original data points on map
+     */
     public Boolean updateOriginalMap(String dataset_key) {
 		point2data.clear();
     	if (map == null) {
     		buildView();
     	}
+        //Initialize variables, and remove all the other marks firstly.
     	Iterator<Component> iterator = map.iterator();
         Collection<Component> remove = new ArrayList<Component>();
         while (iterator.hasNext()) {
@@ -437,7 +477,8 @@ public class MapView extends CssLayout implements LeafletClickListener{
         for (Component component : remove) {
             map.removeComponent(component);
         }
-        
+
+        //set zoom_level and center point.
         zoom_level = 1;
         map.setZoomLevel(zoom_level);
         map.setCenter(new Point(43.041809, -87.906837));
@@ -447,15 +488,18 @@ public class MapView extends CssLayout implements LeafletClickListener{
         MongodbData md = MongodbData.getInstance();
 		ArrayList< ArrayList<String> > dataset = md.getOriginalDataSet(dataset_key);
 
+        //set statistical information
 		label.setValue("#Sites:" + Integer.toString(dataset.size()));
 
         HashSet<String> visited = new HashSet<String>();
-        
+
+        //set color for point mark
         LCircleMarker cMarker = null;
         String color = "#000000";
         
         for (ArrayList<String> tmp : dataset) {
             String key = tmp.get(0) + tmp.get(1);
+            //Associate point information with point key.
             if (visited.contains(key)) {
 				if (!point2data.containsKey(key))
 					point2data.put(key, new ArrayList<ArrayList<String>>());
@@ -463,6 +507,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
                 continue;
             }
             visited.add(key);
+            //add point mark to UI
         	cMarker = new LCircleMarker(Double.parseDouble(tmp.get(0)), Double.parseDouble(tmp.get(1)), 1);
 			cMarker.setData(key);
 			cMarker.setColor(color);
@@ -472,6 +517,7 @@ public class MapView extends CssLayout implements LeafletClickListener{
 			cMarker.addClickListener(this);
     		map.addComponent(cMarker);
 
+            //Associate point information with point key.
 			if (!point2data.containsKey(key))
 				point2data.put(key, new ArrayList<ArrayList<String>>());
 			point2data.get(key).add(tmp);
@@ -480,6 +526,9 @@ public class MapView extends CssLayout implements LeafletClickListener{
         return true;
     }
 
+    /*
+    ClickListenser for Point Marker Click
+     */
 	@Override
 	public void onClick(LeafletClickEvent event) {
 		Object o = event.getSource();

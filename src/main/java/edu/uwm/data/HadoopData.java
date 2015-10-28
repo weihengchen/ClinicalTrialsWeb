@@ -16,20 +16,34 @@ import org.apache.hadoop.fs.Path;
 import com.vaadin.server.VaadinService;
 import com.vaadin.ui.Notification;
 
+/*
+Singleton implement of HadoopData
+ */
+
 public class HadoopData implements Serializable{
+	//instance
 	private static HadoopData instance = null;
-	
-	
+
+	//dataset name collection
 	private ArrayList<String> data_list = null;
+	//dataset filename collection
 	private ArrayList<String> file_name = null;
+	//map from name to full path of dataset
 	private HashMap<String, String> name2full = null;
+	//map from name to dataset content list
 	private HashMap<String, ArrayList< ArrayList<String> > > name2dataset;
+	//map from name to description of dataset
 	private HashMap<String, HashMap<String, String> > name2des;
-	
+
+	//conditions list
 	private ArrayList<String> conditions_list = null;
+	//map from original condition name to full path
 	private HashMap<String, String> original_name2full = null;
+	//map from original name to dataset content list
 	private HashMap<String, ArrayList< ArrayList<String> > > original_name2dataset;
+	//map from original name to description of dataset
 	private HashMap<String, HashMap<String, String> > original_name2des;
+	//Hadoop file system
 	FileSystem fileSystem = null;
 	private HadoopData() {
 		if (false == init()) {
@@ -44,6 +58,7 @@ public class HadoopData implements Serializable{
 		return instance;
 	}
 	private Boolean init() {
+		//initialize variables
 		conditions_list = new ArrayList<String>();
 		data_list = new ArrayList<String>();
 		file_name = new ArrayList<String>();
@@ -52,7 +67,8 @@ public class HadoopData implements Serializable{
 		name2dataset = new HashMap<String, ArrayList< ArrayList<String> > >();
 		original_name2des = new HashMap<String, HashMap<String, String> >();
 		original_name2dataset = new HashMap<String, ArrayList< ArrayList<String> > >();
-		
+
+		//initialize the configuration files in Hadoop, set up for HDFS
 		String basepath = VaadinService.getCurrent().getBaseDirectory().getAbsolutePath();
 		Configuration conf = new Configuration();
     	conf.addResource(new Path(basepath+"/config/hadoop/core-site.xml"));
@@ -63,10 +79,11 @@ public class HadoopData implements Serializable{
     	Path path = new Path(dir);
     	
     	//System.out.println("===="+dir);
-    	
+    	//get data from HDFS
     	try {
     		fileSystem = FileSystem.get(conf);
     		if (fileSystem.exists(path) && fileSystem.isDirectory(path)) {
+				//get file path for cluster results
     			FileStatus []fstatus = fileSystem.listStatus(path);
     			for (FileStatus f : fstatus) {
     				String str = f.getPath().toString();
@@ -80,7 +97,8 @@ public class HadoopData implements Serializable{
     				data_list.add(cond);
     			}
     		}
-    		
+
+			//read conditions from file
     		Path cond = new Path("/user/project/result/conditions.txt");
     		if (fileSystem.exists(cond) && fileSystem.isFile(cond)) {
     			FSDataInputStream fin = fileSystem.open(cond);
@@ -101,9 +119,11 @@ public class HadoopData implements Serializable{
     	
 		return true;
 	}
+    //get cluster results
 	public ArrayList<String> getClusterDataList() {
 		return data_list;
 	}
+    //Read data from HDFS files
 	private void readData(String key) {
 		ArrayList< ArrayList<String> > re = new ArrayList< ArrayList<String> >();
 		HashMap<String, String> de = new HashMap<String, String>();
@@ -134,11 +154,13 @@ public class HadoopData implements Serializable{
 		name2dataset.put(key, re);
 		name2des.put(key, de);
 	}
-	
+
+    //read original dataset from HDFS
 	private Boolean readOriginalData(String key) {
 		ArrayList< ArrayList<String> > re = new ArrayList< ArrayList<String> >();
 		HashMap<String, String> de = new HashMap<String, String>();
-		
+
+        //original condition file
 		String dir = "/user/project/original_data/" + key.replace(' ', '_') + "_original.txt";
     	Path path = new Path(dir);
     	System.out.println(dir);
@@ -154,8 +176,10 @@ public class HadoopData implements Serializable{
         			//System.err.println((new Exception().getStackTrace()[0].getFileName()) + (new Exception().getStackTrace()[0].getLineNumber()) + line);
         			String []sep = line.split("\t");
         			if (sep[0].charAt(0) == '#') {
+                        //description of dataset
         				de.put(sep[0].substring(1), sep[1]);
         			} else {
+                        //content of dataset
         				ArrayList<String> tmp = new ArrayList<String>();
         				for (String str : sep) {
         					tmp.add(str);
@@ -173,12 +197,14 @@ public class HadoopData implements Serializable{
     		e.printStackTrace();
     		return false;
     	}
-		
+
+        //add to HashMap, don't need to run again
 		original_name2dataset.put(key, re);
 		original_name2des.put(key, de);
 		return true;
 	}
-	
+
+    //get conditions list
 	public ArrayList<String> getConditionsList() {
 		if (conditions_list.size() > 100) {
 			ArrayList<String> tmp = new ArrayList<String>();
@@ -189,41 +215,50 @@ public class HadoopData implements Serializable{
 		}
 		return conditions_list;
 	}
+    //get cluster description
 	public HashMap<String, String> getClusterDes(String key) {
+        //return nul, if not exist
 		if (!name2full.containsKey(key)) return null;
+        //read the data, if not read
 		if (!name2des.containsKey(key)) readData(key);
+        //return the stored data
 		return name2des.get(key);
 	}
-	
+	// get cluster dataset
 	public ArrayList< ArrayList<String> > getClusterDataSet(String key) {
 		//mark\tcluster_num\tlatitude\tlongitude\tname\tAddress
-		
+        //return nul, if not exist
 		if (!name2full.containsKey(key)) return null;
 		if (!name2dataset.containsKey(key)) readData(key);
+        //return the stored data
 		return name2dataset.get(key);
 	}
 	
 	public HashMap<String, String> getOriginalDes(String key) {
-		if (!original_name2des.containsKey(key)) {
+        //read the data, if not read
+        if (!original_name2des.containsKey(key)) {
 			Boolean ret = readOriginalData(key);
 			if (!ret) {
 				return null;
 			}
 		}
+        //return the stored data
 		return original_name2des.get(key);
 	}
 	public ArrayList< ArrayList<String> > getOriginalDataSet(String key) {
 		//mark\tcluster_num\tlatitude\tlongitude\tname\tAddress
-		
+        //read the data, if not read
 		if (!original_name2dataset.containsKey(key)) {
 			Boolean ret = readOriginalData(key);
 			if (!ret) {
 				return null;
 			}
 		}
+        //return the stored data
 		return original_name2dataset.get(key);
 	}
 	public void reloadData() {
+        //clear the variables, and reload data
 		instance = null;
 		fileSystem = null;
 		conditions_list = null;
